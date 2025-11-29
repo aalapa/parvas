@@ -128,6 +128,52 @@ data class MahaParva(
             }
     }
 
+    /**
+     * Regenerate Parvas/Saptahas/Dinas with adjusted dates accounting for hold periods
+     * Preserves all user data (goals, notes, completion)
+     */
+    fun regenerateWithHolds(newHoldPeriods: List<HoldPeriod>): MahaParva {
+        // Generate colors
+        val colors = com.aravind.parva.utils.ColorUtils.getColorsForMahaParva(
+            customStartColor,
+            customEndColor
+        )
+        
+        val newParvas = (1..7).map { parvaNumber ->
+            val oldParva = parvas.getOrNull(parvaNumber - 1)
+            
+            // Calculate base date (without holds)
+            val baseParvaStartDate = startDate.plusDays(((parvaNumber - 1) * 49).toLong())
+            
+            // Adjust for holds
+            val adjustedParvaStartDate = com.aravind.parva.utils.DateUtils.calculateAdjustedDate(
+                baseParvaStartDate,
+                newHoldPeriods
+            )
+            
+            val parvaTheme = CycleTheme.fromIndex(parvaNumber - 1)
+            val parvaColor = colors[parvaNumber - 1]
+            val parvaDayOffset = (parvaNumber - 1) * 49 + 1
+            
+            Parva.createWithHolds(
+                number = parvaNumber,
+                theme = parvaTheme,
+                baseStartDate = baseParvaStartDate,
+                adjustedStartDate = adjustedParvaStartDate,
+                absoluteDayOffset = parvaDayOffset,
+                customColor = parvaColor,
+                holdPeriods = newHoldPeriods,
+                existingGoal = oldParva?.customGoal,
+                oldSaptahas = oldParva?.saptahas
+            )
+        }
+        
+        return copy(
+            parvas = newParvas,
+            holdPeriods = newHoldPeriods
+        )
+    }
+
     companion object {
         /**
          * Create a new Maha-Parva with all 7 Parvas (343 days) initialized

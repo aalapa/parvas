@@ -18,10 +18,12 @@ data class Saptaha(
     }
 
     /**
-     * The end date of this Saptaha (7 days from start)
+     * The end date of this Saptaha
+     * If Dinas exist, use the last Dina's date (accounts for holds)
+     * Otherwise, calculate as 7 days from start
      */
     val endDate: LocalDate
-        get() = startDate.plusDays(6)
+        get() = dinas.lastOrNull()?.date ?: startDate.plusDays(6)
 
     /**
      * Get completion progress (0.0 to 1.0)
@@ -82,6 +84,53 @@ data class Saptaha(
                 theme = theme,
                 startDate = startDate,
                 dinas = dinas,
+                customColor = customColor
+            )
+        }
+
+        /**
+         * Create a Saptaha with adjusted dates accounting for hold periods
+         * Preserves user data from old Dinas
+         */
+        fun createWithHolds(
+            number: Int,
+            theme: CycleTheme,
+            baseStartDate: LocalDate,
+            adjustedStartDate: LocalDate,
+            absoluteDayOffset: Int,
+            customColor: androidx.compose.ui.graphics.Color?,
+            holdPeriods: List<HoldPeriod>,
+            existingGoal: String?,
+            oldDinas: List<Dina>?
+        ): Saptaha {
+            val dinas = (0..6).map { dayOffset ->
+                val oldDina = oldDinas?.getOrNull(dayOffset)
+                
+                // Base date without holds
+                val baseDinaDate = baseStartDate.plusDays(dayOffset.toLong())
+                
+                // Adjusted date with holds
+                val adjustedDinaDate = com.aravind.parva.utils.DateUtils.calculateAdjustedDate(
+                    baseDinaDate,
+                    holdPeriods
+                )
+                
+                Dina(
+                    dayNumber = absoluteDayOffset + dayOffset,
+                    date = adjustedDinaDate,
+                    dinaTheme = DinaTheme.fromDay(absoluteDayOffset + dayOffset),
+                    dailyIntention = oldDina?.dailyIntention ?: "",
+                    notes = oldDina?.notes ?: "",
+                    isCompleted = oldDina?.isCompleted ?: false
+                )
+            }
+            
+            return Saptaha(
+                number = number,
+                theme = theme,
+                startDate = adjustedStartDate,
+                dinas = dinas,
+                customGoal = existingGoal ?: "",
                 customColor = customColor
             )
         }

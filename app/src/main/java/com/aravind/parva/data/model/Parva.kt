@@ -18,10 +18,12 @@ data class Parva(
     }
 
     /**
-     * The end date of this Parva (49 days from start)
+     * The end date of this Parva
+     * If Dinas exist, use the last Dina's date (accounts for holds)
+     * Otherwise, calculate as 49 days from start
      */
     val endDate: LocalDate
-        get() = startDate.plusDays(48)
+        get() = allDinas.lastOrNull()?.date ?: startDate.plusDays(48)
 
     /**
      * Get all Dinas across all Saptahas
@@ -102,6 +104,59 @@ data class Parva(
                 theme = theme,
                 startDate = startDate,
                 saptahas = saptahas,
+                customColor = customColor
+            )
+        }
+
+        /**
+         * Create a Parva with adjusted dates accounting for hold periods
+         * Preserves user data from old Saptahas
+         */
+        fun createWithHolds(
+            number: Int,
+            theme: CycleTheme,
+            baseStartDate: LocalDate,
+            adjustedStartDate: LocalDate,
+            absoluteDayOffset: Int,
+            customColor: androidx.compose.ui.graphics.Color?,
+            holdPeriods: List<HoldPeriod>,
+            existingGoal: String?,
+            oldSaptahas: List<Saptaha>?
+        ): Parva {
+            val saptahas = (1..7).map { saptahaNumber ->
+                val oldSaptaha = oldSaptahas?.getOrNull(saptahaNumber - 1)
+                
+                // Base date without holds
+                val baseSaptahaStart = baseStartDate.plusDays(((saptahaNumber - 1) * 7).toLong())
+                
+                // Adjusted date with holds
+                val adjustedSaptahaStart = com.aravind.parva.utils.DateUtils.calculateAdjustedDate(
+                    baseSaptahaStart,
+                    holdPeriods
+                )
+                
+                val saptahaTheme = CycleTheme.fromIndex(saptahaNumber - 1)
+                val saptahaDayOffset = absoluteDayOffset + (saptahaNumber - 1) * 7
+                
+                Saptaha.createWithHolds(
+                    number = saptahaNumber,
+                    theme = saptahaTheme,
+                    baseStartDate = baseSaptahaStart,
+                    adjustedStartDate = adjustedSaptahaStart,
+                    absoluteDayOffset = saptahaDayOffset,
+                    customColor = customColor,
+                    holdPeriods = holdPeriods,
+                    existingGoal = oldSaptaha?.customGoal,
+                    oldDinas = oldSaptaha?.dinas
+                )
+            }
+            
+            return Parva(
+                number = number,
+                theme = theme,
+                startDate = adjustedStartDate,
+                saptahas = saptahas,
+                customGoal = existingGoal ?: "",
                 customColor = customColor
             )
         }

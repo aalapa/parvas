@@ -148,13 +148,19 @@ class MahaParvaRepository(private val mahaParvaDao: MahaParvaDao) {
 
     /**
      * Update hold periods for a Maha-Parva
+     * Regenerates all Parvas/Saptahas/Dinas with adjusted dates
+     * Preserves all user data (goals, notes, completion)
      */
     suspend fun updateHoldPeriods(
         mahaParvaId: String,
         holdPeriods: List<HoldPeriod>
     ) {
         val mahaParva = getMahaParvaByIdOnce(mahaParvaId) ?: return
-        saveMahaParva(mahaParva.copy(holdPeriods = holdPeriods))
+        
+        // Regenerate with new hold periods (preserves user data)
+        val regenerated = mahaParva.regenerateWithHolds(holdPeriods)
+        
+        saveMahaParva(regenerated)
     }
 }
 
