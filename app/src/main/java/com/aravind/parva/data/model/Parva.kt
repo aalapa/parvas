@@ -1,19 +1,20 @@
 package com.aravind.parva.data.model
 
 import java.time.LocalDate
-import java.util.UUID
 
 /**
- * Represents a complete 49-day Parva cycle
+ * Represents a 49-day period (Parva) within a Maha-Parva
  */
 data class Parva(
-    val id: String = UUID.randomUUID().toString(),
-    val title: String,
-    val description: String = "",
+    val number: Int, // 1-7 within its Maha-Parva
+    val theme: CycleTheme,
     val startDate: LocalDate,
-    val days: List<ParvaDay> = emptyList(),
-    val createdAt: LocalDate = LocalDate.now()
+    val saptahas: List<Saptaha> = emptyList()
 ) {
+    init {
+        require(number in 1..7) { "Parva number must be between 1 and 7" }
+    }
+
     /**
      * The end date of this Parva (49 days from start)
      */
@@ -21,7 +22,24 @@ data class Parva(
         get() = startDate.plusDays(48)
 
     /**
-     * Check if this Parva is currently active
+     * Get all Dinas across all Saptahas
+     */
+    val allDinas: List<Dina>
+        get() = saptahas.flatMap { it.dinas }
+
+    /**
+     * Get completion progress (0.0 to 1.0)
+     */
+    val progress: Float
+        get() {
+            val allDays = allDinas
+            if (allDays.isEmpty()) return 0f
+            val completedDays = allDays.count { it.isCompleted }
+            return completedDays.toFloat() / allDays.size.toFloat()
+        }
+
+    /**
+     * Check if this Parva contains today's date
      */
     val isActive: Boolean
         get() {
@@ -30,48 +48,38 @@ data class Parva(
         }
 
     /**
-     * Check if this Parva is completed
+     * Get the current Saptaha if this Parva is active
      */
-    val isCompleted: Boolean
-        get() = LocalDate.now().isAfter(endDate)
-
-    /**
-     * Get the current day number if active, null otherwise
-     */
-    val currentDayNumber: Int?
-        get() {
-            if (!isActive) return null
-            val today = LocalDate.now()
-            return ((today.toEpochDay() - startDate.toEpochDay()).toInt() + 1)
-                .coerceIn(1, 49)
-        }
-
-    /**
-     * Get completion progress (0.0 to 1.0)
-     */
-    val progress: Float
-        get() {
-            val completedDays = days.count { it.isCompleted }
-            return completedDays.toFloat() / 49f
-        }
+    val currentSaptaha: Saptaha?
+        get() = if (isActive) saptahas.find { it.isActive } else null
 
     companion object {
         /**
-         * Create a new Parva with all 49 days initialized
+         * Create a Parva with all 7 Saptahas initialized
          */
         fun create(
-            title: String,
-            description: String = "",
-            startDate: LocalDate = LocalDate.now()
+            number: Int,
+            theme: CycleTheme,
+            startDate: LocalDate,
+            absoluteDayOffset: Int // Starting day number in Maha-Parva
         ): Parva {
-            val days = (1..49).map { dayNumber ->
-                ParvaDay.create(dayNumber, startDate)
+            val saptahas = (1..7).map { saptahaNumber ->
+                val saptahaStartDate = startDate.plusDays(((saptahaNumber - 1) * 7).toLong())
+                val saptahaTheme = CycleTheme.fromIndex(saptahaNumber - 1)
+                val saptahaDayOffset = absoluteDayOffset + (saptahaNumber - 1) * 7
+                
+                Saptaha.create(
+                    number = saptahaNumber,
+                    theme = saptahaTheme,
+                    startDate = saptahaStartDate,
+                    absoluteDayOffset = saptahaDayOffset
+                )
             }
             return Parva(
-                title = title,
-                description = description,
+                number = number,
+                theme = theme,
                 startDate = startDate,
-                days = days
+                saptahas = saptahas
             )
         }
     }

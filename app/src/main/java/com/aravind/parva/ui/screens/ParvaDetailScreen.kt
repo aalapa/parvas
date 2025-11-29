@@ -1,38 +1,48 @@
 package com.aravind.parva.ui.screens
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
-import com.aravind.parva.data.model.Parva
-import com.aravind.parva.ui.components.MiniParvaSection
-import com.aravind.parva.ui.components.ParvaProgress
+import com.aravind.parva.data.model.MahaParva
+import com.aravind.parva.data.model.Saptaha
+import com.aravind.parva.ui.components.MandalaSection
+import com.aravind.parva.ui.components.MandalaView
 import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ParvaDetailScreen(
-    parvaId: String,
-    onBackClick: () -> Unit
+    mahaParvaId: String,
+    parvaIndex: Int,
+    viewMode: String, // "mandala" or "list"
+    onBackClick: () -> Unit,
+    onSaptahaClick: (Int) -> Unit
 ) {
-    // Sample data - in a real app, this would come from a ViewModel
-    val parva = remember {
-        Parva.create(
-            title = "Morning Meditation",
-            description = "Establish a daily meditation practice",
+    // Sample data
+    val mahaParva = remember {
+        MahaParva.create(
+            title = "Spiritual Growth",
             startDate = LocalDate.now()
         )
     }
+    val parva = mahaParva.parvas[parvaIndex]
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(parva.title) },
+                title = { Text("${parva.theme.displayName} Parva") },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
@@ -46,42 +56,114 @@ fun ParvaDetailScreen(
             )
         }
     ) { padding ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            // Header with description and progress
-            item {
-                Card(
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        Text(
-                            parva.description,
-                            style = MaterialTheme.typography.bodyLarge
-                        )
-                        ParvaProgress(parva = parva)
-                    }
+        if (viewMode == "mandala") {
+            // Mandala view of 7 Saptahas
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                val sections = parva.saptahas.map { saptaha ->
+                    MandalaSection(
+                        label = saptaha.theme.displayName.take(4),
+                        color = saptaha.theme.color,
+                        centerText = saptaha.number.toString(),
+                        theme = saptaha.theme
+                    )
+                }
+
+                val currentSaptahaIndex = parva.currentSaptaha?.let { it.number - 1 }
+
+                MandalaView(
+                    sections = sections,
+                    currentSectionIndex = currentSaptahaIndex,
+                    onSectionClick = { index ->
+                        onSaptahaClick(index)
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                )
+            }
+        } else {
+            // List view of 7 Saptahas
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding),
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                itemsIndexed(parva.saptahas) { index, saptaha ->
+                    SaptahaCard(
+                        saptaha = saptaha,
+                        isActive = saptaha.isActive,
+                        onClick = { onSaptahaClick(index) }
+                    )
                 }
             }
+        }
+    }
+}
 
-            // Mini-Parvas (7 sections of 7 days each)
-            items(7) { miniParvaIndex ->
-                val miniParvaNumber = miniParvaIndex + 1
-                val startDay = miniParvaIndex * 7 + 1
-                val endDay = startDay + 6
-                val daysInMiniParva = parva.days.subList(startDay - 1, endDay)
-
-                MiniParvaSection(
-                    miniParvaNumber = miniParvaNumber,
-                    days = daysInMiniParva
+@Composable
+private fun SaptahaCard(
+    saptaha: Saptaha,
+    isActive: Boolean,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(saptaha.theme.color.copy(alpha = if (isActive) 0.3f else 0.1f))
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Text(
+                    text = "Saptaha ${saptaha.number}",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = saptaha.theme.color
                 )
+                Text(
+                    text = saptaha.theme.displayName,
+                    style = MaterialTheme.typography.titleMedium
+                )
+                Text(
+                    text = saptaha.theme.description,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                val dateFormatter = DateTimeFormatter.ofPattern("MMM dd")
+                Text(
+                    text = "${saptaha.startDate.format(dateFormatter)} - ${saptaha.endDate.format(dateFormatter)}",
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+
+            if (isActive) {
+                Surface(
+                    shape = RoundedCornerShape(16.dp),
+                    color = saptaha.theme.color
+                ) {
+                    Text(
+                        text = "Active",
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.surface
+                    )
+                }
             }
         }
     }

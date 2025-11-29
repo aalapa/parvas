@@ -10,12 +10,12 @@ val Purple40 = Color(0xFF6650a4)
 val PurpleGrey40 = Color(0xFF625b71)
 val Pink40 = Color(0xFF7D5260)
 
-// Parva specific colors
-val ParvaBlue = Color(0xFF1E88E5)
-val ParvaPurple = Color(0xFF7E57C2)
-val ParvaGreen = Color(0xFF43A047)
-val ParvaOrange = Color(0xFFFF6F00)
-val ParvaRed = Color(0xFFE53935)
-val ParvaTeal = Color(0xFF00897B)
-val ParvaIndigo = Color(0xFF3949AB)
+// VIBGYOR colors for the 7 themes
+val VibgyorViolet = Color(0xFF8B00FF)    // Beginning
+val VibgyorIndigo = Color(0xFF4B0082)    // Practice
+val VibgyorBlue = Color(0xFF0000FF)      // Discernment
+val VibgyorGreen = Color(0xFF00FF00)     // Ascent
+val VibgyorYellow = Color(0xFFFFFF00)    // Mastery
+val VibgyorOrange = Color(0xFFFF7F00)    // Flow
+val VibgyorRed = Color(0xFFFF0000)       // Renewal
 

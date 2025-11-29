@@ -1,10 +1,10 @@
 package com.aravind.parva.data.model
 
 /**
- * Represents the 7 daily micro-themes (Macro-Parva)
- * These repeat every 7 days throughout the 49-day cycle
+ * Represents the 7 daily themes (Dina)
+ * These repeat every 7 days throughout the entire cycle
  */
-enum class MacroParvaTheme(val displayName: String, val description: String) {
+enum class DinaTheme(val displayName: String, val description: String) {
     INITIATE(
         "Initiate",
         "Start fresh. Set intentions and take the first step."
@@ -36,10 +36,10 @@ enum class MacroParvaTheme(val displayName: String, val description: String) {
 
     companion object {
         /**
-         * Get Macro-Parva theme by day number (1-49)
+         * Get Dina theme by day number in the overall cycle (1-343)
          */
-        fun fromDay(day: Int): MacroParvaTheme {
-            require(day in 1..49) { "Day must be between 1 and 49" }
+        fun fromDay(day: Int): DinaTheme {
+            require(day in 1..343) { "Day must be between 1 and 343" }
             val dayInWeek = (day - 1) % 7
             return values()[dayInWeek]
         }

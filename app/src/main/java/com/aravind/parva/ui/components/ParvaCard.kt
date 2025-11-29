@@ -6,12 +6,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.aravind.parva.data.model.Parva
+import com.aravind.parva.data.model.MahaParva
 import java.time.format.DateTimeFormatter
 
 @Composable
-fun ParvaCard(
-    parva: Parva,
+fun MahaParvaCard(
+    mahaParva: MahaParva,
     onClick: () -> Unit
 ) {
     Card(
@@ -26,15 +26,28 @@ fun ParvaCard(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Text(
-                text = parva.title,
+                text = mahaParva.title,
                 style = MaterialTheme.typography.titleLarge
             )
             
-            if (parva.description.isNotEmpty()) {
+            if (mahaParva.description.isNotEmpty()) {
                 Text(
-                    text = parva.description,
+                    text = mahaParva.description,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            // Show current position
+            val currentDay = mahaParva.currentDayNumber
+            val currentParva = mahaParva.currentParva
+            val currentSaptaha = mahaParva.currentSaptaha
+            
+            if (currentDay != null && currentParva != null && currentSaptaha != null) {
+                Text(
+                    text = "Day $currentDay • ${currentParva.theme.displayName} • ${currentSaptaha.theme.displayName}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.primary
                 )
             }
 
@@ -43,21 +56,21 @@ fun ParvaCard(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "Day ${parva.currentDayNumber ?: "—"} of 49",
+                    text = "Day ${mahaParva.currentDayNumber ?: "—"} of 343",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.primary
                 )
                 
                 val dateFormatter = DateTimeFormatter.ofPattern("MMM dd, yyyy")
                 Text(
-                    text = "${parva.startDate.format(dateFormatter)} - ${parva.endDate.format(dateFormatter)}",
+                    text = mahaParva.startDate.format(dateFormatter),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
             LinearProgressIndicator(
-                progress = parva.progress,
+                progress = mahaParva.progress,
                 modifier = Modifier.fillMaxWidth()
             )
         }

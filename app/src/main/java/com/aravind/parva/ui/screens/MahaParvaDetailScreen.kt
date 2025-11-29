@@ -1,0 +1,137 @@
+package com.aravind.parva.ui.screens
+
+import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import com.aravind.parva.data.model.MahaParva
+import com.aravind.parva.ui.components.MandalaSection
+import com.aravind.parva.ui.components.MandalaView
+import java.time.LocalDate
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun MahaParvaDetailScreen(
+    mahaParvaId: String,
+    onBackClick: () -> Unit,
+    onParvaClick: (Int) -> Unit
+) {
+    // Sample data - in real app, get from ViewModel
+    val mahaParva = remember {
+        MahaParva.create(
+            title = "Spiritual Growth",
+            description = "A journey of 343 days towards inner peace",
+            startDate = LocalDate.now()
+        )
+    }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(mahaParva.title) },
+                navigationIcon = {
+                    IconButton(onClick = onBackClick) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimary,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
+                )
+            )
+        }
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            // Description card
+            Card(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        mahaParva.description,
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                    
+                    val currentDay = mahaParva.currentDayNumber
+                    if (currentDay != null) {
+                        Text(
+                            "Day $currentDay of 343",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                    
+                    LinearProgressIndicator(
+                        progress = (mahaParva.currentDayNumber ?: 0).toFloat() / 343f,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            }
+
+            // Mandala showing 7 Parvas
+            Text(
+                "The 7 Parvas",
+                style = MaterialTheme.typography.titleLarge
+            )
+
+            val sections = mahaParva.parvas.map { parva ->
+                MandalaSection(
+                    label = parva.theme.displayName.take(4), // Short label for mandala
+                    color = parva.theme.color,
+                    centerText = parva.number.toString(),
+                    theme = parva.theme
+                )
+            }
+
+            val currentParvaIndex = mahaParva.currentParva?.let { it.number - 1 }
+
+            MandalaView(
+                sections = sections,
+                currentSectionIndex = currentParvaIndex,
+                onSectionClick = { index ->
+                    onParvaClick(index)
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+            )
+
+            // Legend
+            Card(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(
+                    modifier = Modifier.padding(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Text(
+                        "Tap a section to explore",
+                        style = MaterialTheme.typography.labelLarge
+                    )
+                    mahaParva.parvas.forEach { parva ->
+                        Text(
+                            "${parva.number}. ${parva.theme.displayName}",
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+

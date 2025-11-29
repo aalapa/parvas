@@ -5,32 +5,34 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.aravind.parva.data.model.Parva
-import com.aravind.parva.ui.components.ParvaCard
+import com.aravind.parva.data.model.MahaParva
+import com.aravind.parva.ui.components.MahaParvaCard
 import java.time.LocalDate
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
-    onParvaClick: (String) -> Unit
+    onMahaParvaClick: (String) -> Unit,
+    onSettingsClick: () -> Unit
 ) {
-    // Sample data - in a real app, this would come from a ViewModel
-    var parvas by remember {
+    // Sample data - in real app, this would come from ViewModel/Repository
+    var mahaParvas by remember {
         mutableStateOf(
             listOf(
-                Parva.create(
-                    title = "Morning Meditation",
-                    description = "Establish a daily meditation practice",
+                MahaParva.create(
+                    title = "Spiritual Growth",
+                    description = "A journey of 343 days towards inner peace",
                     startDate = LocalDate.now()
                 ),
-                Parva.create(
-                    title = "Learn Kotlin",
-                    description = "Master Kotlin programming language",
-                    startDate = LocalDate.now().minusDays(10)
+                MahaParva.create(
+                    title = "Master Kotlin",
+                    description = "Complete mastery of Kotlin and Android development",
+                    startDate = LocalDate.now().minusDays(50)
                 )
             )
         )
@@ -39,29 +41,35 @@ fun HomeScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Parva") },
+                title = { Text("Maha-Parva") },
+                actions = {
+                    IconButton(onClick = onSettingsClick) {
+                        Icon(Icons.Default.MoreVert, contentDescription = "Settings")
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimary
+                    titleContentColor = MaterialTheme.colorScheme.onPrimary,
+                    actionIconContentColor = MaterialTheme.colorScheme.onPrimary
                 )
             )
         },
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {
-                    // Add new Parva
-                    val newParva = Parva.create(
-                        title = "New Parva ${parvas.size + 1}",
-                        description = "A new 49-day journey"
+                    // Add new Maha-Parva
+                    val newMahaParva = MahaParva.create(
+                        title = "New Journey ${mahaParvas.size + 1}",
+                        description = "A new 343-day cycle"
                     )
-                    parvas = parvas + newParva
+                    mahaParvas = mahaParvas + newMahaParva
                 }
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Add Parva")
+                Icon(Icons.Default.Add, contentDescription = "Add Maha-Parva")
             }
         }
     ) { padding ->
-        if (parvas.isEmpty()) {
+        if (mahaParvas.isEmpty()) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -69,7 +77,7 @@ fun HomeScreen(
                 contentAlignment = androidx.compose.ui.Alignment.Center
             ) {
                 Text(
-                    "No Parvas yet. Tap + to create one!",
+                    "No Maha-Parvas yet. Tap + to create one!",
                     style = MaterialTheme.typography.bodyLarge
                 )
             }
@@ -81,10 +89,10 @@ fun HomeScreen(
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                items(parvas) { parva ->
-                    ParvaCard(
-                        parva = parva,
-                        onClick = { onParvaClick(parva.id) }
+                items(mahaParvas) { mahaParva ->
+                    MahaParvaCard(
+                        mahaParva = mahaParva,
+                        onClick = { onMahaParvaClick(mahaParva.id) }
                     )
                 }
             }
