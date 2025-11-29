@@ -41,9 +41,9 @@ fun SettingsScreen(
     val isDarkTheme by preferencesManager.darkThemeFlow.collectAsState(initial = false)
     val useDynamicColors by preferencesManager.useDynamicColorsFlow.collectAsState(initial = false)
     
-    // File picker for import
+    // File picker for import - OpenDocument shows all file sources
     val importLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
+        contract = ActivityResultContracts.OpenDocument()
     ) { uri: Uri? ->
         uri?.let {
             scope.launch {
@@ -198,8 +198,10 @@ fun SettingsScreen(
                                         .create()
                                     val jsonString = gson.toJson(exportData)
                                     
-                                    // Save to file
-                                    val file = File(context.cacheDir, "parva_export_${System.currentTimeMillis()}.json")
+                                    // Save to file with readable date/time
+                                    val timestamp = java.time.LocalDateTime.now()
+                                        .format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss"))
+                                    val file = File(context.cacheDir, "mandala_export_$timestamp.json")
                                     file.writeText(jsonString)
                                     
                                     // Share file
@@ -230,7 +232,8 @@ fun SettingsScreen(
                         title = "Import Data",
                         subtitle = "Import previously exported JSON file",
                         onClick = {
-                            importLauncher.launch("application/json")
+                            // Use array of MIME types to show more file sources
+                            importLauncher.launch(arrayOf("application/json", "*/*"))
                         }
                     )
                 }
