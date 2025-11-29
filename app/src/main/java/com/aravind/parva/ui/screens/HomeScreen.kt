@@ -30,6 +30,7 @@ fun HomeScreen(
     
     var showCreateDialog by remember { mutableStateOf(false) }
     var editingMahaParva by remember { mutableStateOf<MahaParva?>(null) }
+    var deletingMahaParva by remember { mutableStateOf<MahaParva?>(null) }
 
     Scaffold(
         topBar = {
@@ -81,7 +82,8 @@ fun HomeScreen(
                     MahaParvaCard(
                         mahaParva = mahaParva,
                         onClick = { onMahaParvaClick(mahaParva.id) },
-                        onEditClick = { editingMahaParva = mahaParva }
+                        onEditClick = { editingMahaParva = mahaParva },
+                        onDeleteClick = { deletingMahaParva = mahaParva }
                     )
                 }
             }
@@ -106,6 +108,39 @@ fun HomeScreen(
                 }
                 showCreateDialog = false
                 editingMahaParva = null
+            }
+        )
+    }
+    
+    // Delete Confirmation Dialog
+    deletingMahaParva?.let { mahaParva ->
+        AlertDialog(
+            onDismissRequest = { deletingMahaParva = null },
+            title = { Text("Delete Maha-Parva?") },
+            text = {
+                Text(
+                    "Are you sure you want to delete \"${mahaParva.title}\"?\n\n" +
+                    "This will permanently delete all 343 days of data including " +
+                    "goals, intentions, and notes. This action cannot be undone."
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.deleteMahaParva(mahaParva)
+                        deletingMahaParva = null
+                    },
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = MaterialTheme.colorScheme.error
+                    )
+                ) {
+                    Text("Delete")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { deletingMahaParva = null }) {
+                    Text("Cancel")
+                }
             }
         )
     }
