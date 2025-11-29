@@ -15,7 +15,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.aravind.parva.data.model.MahaParva
 import com.aravind.parva.data.model.MandalaStyle
+import java.time.Instant
 import java.time.LocalDate
+import java.time.ZoneId
 
 @Composable
 fun MahaParvaEditorDialog(
@@ -93,9 +95,9 @@ fun MahaParvaEditorDialog(
                     )
                 }
                 
-                val endDate = startDate.plusDays(342)
+                val endDate = startDate.plusDays(342 + (existingMahaParva?.totalHoldDays?.toLong() ?: 0))
                 Text(
-                    "End date: ${endDate.format(java.time.format.DateTimeFormatter.ofPattern("MMMM dd, yyyy"))} (343 days)",
+                    "End date: ${endDate.format(java.time.format.DateTimeFormatter.ofPattern("MMMM dd, yyyy"))} (343 days${if (existingMahaParva != null && existingMahaParva.totalHoldDays > 0) " + ${existingMahaParva.totalHoldDays} hold days" else ""})",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -229,10 +231,11 @@ fun MahaParvaEditorDialog(
         }
     )
     
-    // Date Picker Dialog
+    // Modern Material3 Date Picker Dialog
     if (showDatePicker) {
-        DatePickerDialog(
+        ModernDatePickerDialog(
             currentDate = startDate,
+            allowPastDates = existingMahaParva != null, // Only allow past dates when editing
             onDateSelected = { selectedDate ->
                 startDate = selectedDate
                 showDatePicker = false
@@ -242,77 +245,40 @@ fun MahaParvaEditorDialog(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun DatePickerDialog(
+private fun ModernDatePickerDialog(
     currentDate: LocalDate,
+    allowPastDates: Boolean = false,
     onDateSelected: (LocalDate) -> Unit,
     onDismiss: () -> Unit
 ) {
-    var year by remember { mutableStateOf(currentDate.year) }
-    var month by remember { mutableStateOf(currentDate.monthValue) }
-    var day by remember { mutableStateOf(currentDate.dayOfMonth) }
+    // Convert LocalDate to millis for DatePicker
+    val initialDateMillis = currentDate
+        .atStartOfDay(ZoneId.systemDefault())
+        .toInstant()
+        .toEpochMilli()
     
-    AlertDialog(
+    // Get today's date at midnight in millis for validation
+    val todayMillis = LocalDate.now()
+        .atStartOfDay(ZoneId.systemDefault())
+        .toInstant()
+        .toEpochMilli()
+    
+    val datePickerState = rememberDatePickerState(
+        initialSelectedDateMillis = initialDateMillis
+    )
+    
+    DatePickerDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Select Start Date") },
-        text = {
-            Column(
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                // Year
-                OutlinedTextField(
-                    value = year.toString(),
-                    onValueChange = { 
-                        it.toIntOrNull()?.let { newYear ->
-                            if (newYear in 2020..2100) year = newYear
-                        }
-                    },
-                    label = { Text("Year") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
-                
-                // Month
-                OutlinedTextField(
-                    value = month.toString(),
-                    onValueChange = { 
-                        it.toIntOrNull()?.let { newMonth ->
-                            if (newMonth in 1..12) month = newMonth
-                        }
-                    },
-                    label = { Text("Month (1-12)") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
-                
-                // Day
-                OutlinedTextField(
-                    value = day.toString(),
-                    onValueChange = { 
-                        it.toIntOrNull()?.let { newDay ->
-                            if (newDay in 1..31) day = newDay
-                        }
-                    },
-                    label = { Text("Day (1-31)") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
-                
-                Text(
-                    "Selected: ${try { LocalDate.of(year, month, day).format(java.time.format.DateTimeFormatter.ofPattern("MMMM dd, yyyy")) } catch (e: Exception) { "Invalid date" }}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.primary
-                )
-            }
-        },
         confirmButton = {
-            Button(
+            TextButton(
                 onClick = {
-                    try {
-                        val selectedDate = LocalDate.of(year, month, day)
+                    datePickerState.selectedDateMillis?.let { millis ->
+                        val selectedDate = Instant.ofEpochMilli(millis)
+                            .atZone(ZoneId.systemDefault())
+                            .toLocalDate()
                         onDateSelected(selectedDate)
-                    } catch (e: Exception) {
-                        // Invalid date, do nothing
                     }
                 }
             ) {
@@ -324,7 +290,26 @@ private fun DatePickerDialog(
                 Text("Cancel")
             }
         }
-    )
+    ) {
+        DatePicker(
+            state = datePickerState,
+            showModeToggle = true,
+            title = {
+                Text(
+                    text = "Select Start Date",
+                    modifier = Modifier.padding(16.dp)
+                )
+            },
+            dateValidator = { dateMillis ->
+                // If past dates are not allowed, only allow today or future
+                if (allowPastDates) {
+                    true // Allow all dates when editing
+                } else {
+                    dateMillis >= todayMillis // Only today or future when creating new
+                }
+            }
+        )
+    }
 }
 
 @Composable

@@ -13,7 +13,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.aravind.parva.data.model.HoldPeriod
 import com.aravind.parva.data.model.MahaParva
+import java.time.Instant
 import java.time.LocalDate
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
 @Composable
@@ -257,7 +259,7 @@ private fun AddHoldPeriodDialog(
     )
 
     if (showDatePicker) {
-        SimpleDatePickerDialog(
+        ModernDatePickerDialog(
             currentDate = startDate,
             onDateSelected = {
                 startDate = it
@@ -268,69 +270,33 @@ private fun AddHoldPeriodDialog(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun SimpleDatePickerDialog(
+private fun ModernDatePickerDialog(
     currentDate: LocalDate,
     onDateSelected: (LocalDate) -> Unit,
     onDismiss: () -> Unit
 ) {
-    var year by remember { mutableStateOf(currentDate.year) }
-    var month by remember { mutableStateOf(currentDate.monthValue) }
-    var day by remember { mutableStateOf(currentDate.dayOfMonth) }
-
-    AlertDialog(
+    // Convert LocalDate to millis for DatePicker
+    val initialDateMillis = currentDate
+        .atStartOfDay(ZoneId.systemDefault())
+        .toInstant()
+        .toEpochMilli()
+    
+    val datePickerState = rememberDatePickerState(
+        initialSelectedDateMillis = initialDateMillis
+    )
+    
+    DatePickerDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Select Date") },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(
-                    value = year.toString(),
-                    onValueChange = {
-                        it.toIntOrNull()?.let { newYear ->
-                            if (newYear in 2020..2100) year = newYear
-                        }
-                    },
-                    label = { Text("Year") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
-                OutlinedTextField(
-                    value = month.toString(),
-                    onValueChange = {
-                        it.toIntOrNull()?.let { newMonth ->
-                            if (newMonth in 1..12) month = newMonth
-                        }
-                    },
-                    label = { Text("Month (1-12)") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
-                OutlinedTextField(
-                    value = day.toString(),
-                    onValueChange = {
-                        it.toIntOrNull()?.let { newDay ->
-                            if (newDay in 1..31) day = newDay
-                        }
-                    },
-                    label = { Text("Day (1-31)") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Text(
-                    "Selected: ${try { LocalDate.of(year, month, day).format(DateTimeFormatter.ofPattern("MMMM dd, yyyy")) } catch (e: Exception) { "Invalid date" }}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.primary
-                )
-            }
-        },
         confirmButton = {
-            Button(
+            TextButton(
                 onClick = {
-                    try {
-                        val selectedDate = LocalDate.of(year, month, day)
+                    datePickerState.selectedDateMillis?.let { millis ->
+                        val selectedDate = Instant.ofEpochMilli(millis)
+                            .atZone(ZoneId.systemDefault())
+                            .toLocalDate()
                         onDateSelected(selectedDate)
-                    } catch (e: Exception) {
-                        // Invalid date
                     }
                 }
             ) {
@@ -342,6 +308,17 @@ private fun SimpleDatePickerDialog(
                 Text("Cancel")
             }
         }
-    )
+    ) {
+        DatePicker(
+            state = datePickerState,
+            showModeToggle = true,
+            title = {
+                Text(
+                    text = "Select Date",
+                    modifier = Modifier.padding(16.dp)
+                )
+            }
+        )
+    }
 }
 
