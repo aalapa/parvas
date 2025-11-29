@@ -13,12 +13,15 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.aravind.parva.data.model.Dina
 import com.aravind.parva.data.model.MahaParva
 import com.aravind.parva.ui.components.GoalCard
 import com.aravind.parva.viewmodel.MahaParvaViewModel
+import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
@@ -28,12 +31,17 @@ fun SaptahaDetailScreen(
     viewModel: MahaParvaViewModel,
     parvaIndex: Int,
     saptahaIndex: Int,
+    yojanaMode: Boolean, // Inherited from Maha-Parva
     onBackClick: () -> Unit,
     onDinaClick: (Int) -> Unit
 ) {
     // Get data from ViewModel
     val mahaParva by viewModel.mahaParva.collectAsStateWithLifecycle()
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
+    
+    val context = LocalContext.current
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
     
     // Handle loading and null states
     if (isLoading || mahaParva == null) {
@@ -51,6 +59,7 @@ fun SaptahaDetailScreen(
     val saptaha = parva.saptahas[saptahaIndex]
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text("Saptaha ${saptaha.number} - ${saptaha.theme.sanskritName}") },
@@ -122,13 +131,34 @@ fun SaptahaDetailScreen(
                 )
             }
 
+            // Mode indicator
+            item {
+                Text(
+                    text = if (yojanaMode) "Yojana Mode: Plan all days" else "Today Mode: Current day only",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = if (yojanaMode) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.primary
+                )
+            }
+            
             // 7 Dinas
             items(saptaha.dinas) { dina ->
+                val isToday = dina.date == LocalDate.now()
+                val isClickable = yojanaMode || isToday
+                
                 DinaCard(
                     dina = dina,
                     accentColor = saptaha.theme.color,
-                    isToday = dina.date == LocalDate.now(),
-                    onClick = { onDinaClick(dina.dayInSaptaha - 1) }
+                    isToday = isToday,
+                    isClickable = isClickable,
+                    onClick = {
+                        if (isClickable) {
+                            onDinaClick(dina.dayInSaptaha - 1)
+                        } else {
+                            scope.launch {
+                                snackbarHostState.showSnackbar("Enable Yojana mode to plan future periods")
+                            }
+                        }
+                    }
                 )
             }
         }
@@ -140,18 +170,27 @@ private fun DinaCard(
     dina: Dina,
     accentColor: androidx.compose.ui.graphics.Color,
     isToday: Boolean,
+    isClickable: Boolean,
     onClick: () -> Unit
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
+            .clickable(onClick = onClick),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isClickable) 
+                MaterialTheme.colorScheme.surface 
+            else 
+                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+        )
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(
-                    if (isToday)
+                    if (!isClickable)
+                        Color.Gray.copy(alpha = 0.2f)
+                    else if (isToday)
                         accentColor.copy(alpha = 0.3f)
                     else if (dina.isCompleted)
                         accentColor.copy(alpha = 0.15f)
@@ -173,12 +212,12 @@ private fun DinaCard(
                     Text(
                         text = "Day ${dina.dayNumber}",
                         style = MaterialTheme.typography.labelLarge,
-                        color = accentColor
+                        color = if (isClickable) accentColor else Color.Gray
                     )
                     if (isToday) {
                         Surface(
                             shape = RoundedCornerShape(12.dp),
-                            color = accentColor
+                            color = if (isClickable) accentColor else Color.Gray
                         ) {
                             Text(
                                 text = "Today",
@@ -191,23 +230,25 @@ private fun DinaCard(
                 }
                 Text(
                     text = dina.dinaTheme.displayName,
-                    style = MaterialTheme.typography.titleMedium
+                    style = MaterialTheme.typography.titleMedium,
+                    color = if (isClickable) MaterialTheme.colorScheme.onSurface else Color.Gray
                 )
                 Text(
                     text = dina.dinaTheme.description,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = if (isClickable) MaterialTheme.colorScheme.onSurfaceVariant else Color.Gray.copy(alpha = 0.6f)
                 )
                 val dateFormatter = DateTimeFormatter.ofPattern("EEE, MMM dd")
                 Text(
                     text = dina.date.format(dateFormatter),
-                    style = MaterialTheme.typography.bodySmall
+                    style = MaterialTheme.typography.bodySmall,
+                    color = if (isClickable) MaterialTheme.colorScheme.onSurface else Color.Gray
                 )
                 if (dina.notes.isNotEmpty()) {
                     Text(
                         text = "\"${dina.notes.take(50)}${if (dina.notes.length > 50) "..." else ""}\"",
                         style = MaterialTheme.typography.bodySmall,
-                        color = accentColor
+                        color = if (isClickable) accentColor else Color.Gray
                     )
                 }
             }
@@ -216,7 +257,7 @@ private fun DinaCard(
                 Text(
                     text = "✓",
                     style = MaterialTheme.typography.headlineMedium,
-                    color = accentColor
+                    color = if (isClickable) accentColor else Color.Gray
                 )
             }
         }

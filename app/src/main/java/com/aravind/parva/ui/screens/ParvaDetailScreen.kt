@@ -17,6 +17,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.aravind.parva.data.model.MahaParva
@@ -25,6 +27,7 @@ import com.aravind.parva.ui.components.MandalaSection
 import com.aravind.parva.ui.components.MandalaView
 import com.aravind.parva.ui.components.GoalCard
 import com.aravind.parva.viewmodel.MahaParvaViewModel
+import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
@@ -34,12 +37,17 @@ fun ParvaDetailScreen(
     viewModel: MahaParvaViewModel,
     parvaIndex: Int,
     viewMode: String, // "mandala" or "list" (initial mode from navigation)
+    yojanaMode: Boolean, // Inherited from Maha-Parva
     onBackClick: () -> Unit,
-    onSaptahaClick: (Int) -> Unit
+    onSaptahaClick: (Int, Boolean) -> Unit // Pass yojanaMode down
 ) {
     // Get data from ViewModel
     val mahaParva by viewModel.mahaParva.collectAsStateWithLifecycle()
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
+    
+    val context = LocalContext.current
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
     
     // Handle loading and null states
     if (isLoading || mahaParva == null) {
@@ -59,6 +67,7 @@ fun ParvaDetailScreen(
     var currentViewMode by remember { mutableStateOf(viewMode) }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text("Parva ${parva.number} - ${parva.theme.sanskritName}") },
@@ -119,21 +128,24 @@ fun ParvaDetailScreen(
                 )
                 
                 Text(
-                    text = "7 Saptahas - Tap any section",
+                    text = if (yojanaMode) "Yojana Mode: Plan all Saptahas" else "Today Mode: Current Saptaha only",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = if (yojanaMode) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.primary
                 )
                 
-                val sections = parva.saptahas.map { saptaha ->
+                val currentSaptahaIndex = parva.currentSaptaha?.let { it.number - 1 }
+                
+                val sections = parva.saptahas.mapIndexed { index, saptaha ->
+                    val isCurrentSection = index == currentSaptahaIndex
+                    val isClickable = yojanaMode || isCurrentSection
+                    
                     MandalaSection(
-                        label = saptaha.theme.displayName, // Full name, not truncated
-                        color = saptaha.color, // Use custom color if set
+                        label = saptaha.theme.displayName,
+                        color = if (isClickable) saptaha.color else Color.Gray,
                         centerText = saptaha.number.toString(),
                         theme = saptaha.theme
                     )
                 }
-
-                val currentSaptahaIndex = parva.currentSaptaha?.let { it.number - 1 }
 
                 Box(
                     modifier = Modifier
@@ -143,10 +155,17 @@ fun ParvaDetailScreen(
                 ) {
                 MandalaView(
                     sections = sections,
-                    currentSectionIndex = currentSaptahaIndex,
-                    style = currentMahaParva.mandalaStyle, // Use Maha-Parva's style
+                    currentSectionIndex = if (yojanaMode) currentSaptahaIndex else null,
+                    style = currentMahaParva.mandalaStyle,
                     onSectionClick = { index ->
-                        onSaptahaClick(index)
+                        val isCurrentSection = index == currentSaptahaIndex
+                        if (yojanaMode || isCurrentSection) {
+                            onSaptahaClick(index, yojanaMode)
+                        } else {
+                            scope.launch {
+                                snackbarHostState.showSnackbar("Enable Yojana mode to plan future periods")
+                            }
+                        }
                     },
                     modifier = Modifier.fillMaxSize()
                 )
@@ -176,10 +195,23 @@ fun ParvaDetailScreen(
                 }
                 
                 itemsIndexed(parva.saptahas) { index, saptaha ->
+                    val currentSaptahaIndex = parva.currentSaptaha?.let { it.number - 1 }
+                    val isCurrentSection = index == currentSaptahaIndex
+                    val isClickable = yojanaMode || isCurrentSection
+                    
                     SaptahaCard(
                         saptaha = saptaha,
                         isActive = saptaha.isActive,
-                        onClick = { onSaptahaClick(index) }
+                        isClickable = isClickable,
+                        onClick = {
+                            if (isClickable) {
+                                onSaptahaClick(index, yojanaMode)
+                            } else {
+                                scope.launch {
+                                    snackbarHostState.showSnackbar("Enable Yojana mode to plan future periods")
+                                }
+                            }
+                        }
                     )
                 }
             }
@@ -191,17 +223,29 @@ fun ParvaDetailScreen(
 private fun SaptahaCard(
     saptaha: Saptaha,
     isActive: Boolean,
+    isClickable: Boolean,
     onClick: () -> Unit
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
+            .clickable(onClick = onClick),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isClickable) 
+                MaterialTheme.colorScheme.surface 
+            else 
+                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+        )
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(saptaha.theme.color.copy(alpha = if (isActive) 0.3f else 0.1f))
+                .background(
+                    if (isClickable)
+                        saptaha.theme.color.copy(alpha = if (isActive) 0.3f else 0.1f)
+                    else
+                        Color.Gray.copy(alpha = 0.2f)
+                )
                 .padding(16.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
@@ -213,21 +257,23 @@ private fun SaptahaCard(
                 Text(
                     text = "Saptaha ${saptaha.number} - ${saptaha.theme.sanskritName}",
                     style = MaterialTheme.typography.titleMedium,
-                    color = saptaha.theme.color
+                    color = if (isClickable) saptaha.theme.color else Color.Gray
                 )
                 Text(
                     text = saptaha.theme.displayName,
-                    style = MaterialTheme.typography.bodyMedium
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = if (isClickable) MaterialTheme.colorScheme.onSurface else Color.Gray
                 )
                 Text(
                     text = saptaha.theme.description,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = if (isClickable) MaterialTheme.colorScheme.onSurfaceVariant else Color.Gray.copy(alpha = 0.6f)
                 )
                 val dateFormatter = DateTimeFormatter.ofPattern("MMM dd")
                 Text(
                     text = "${saptaha.startDate.format(dateFormatter)} - ${saptaha.endDate.format(dateFormatter)}",
-                    style = MaterialTheme.typography.bodySmall
+                    style = MaterialTheme.typography.bodySmall,
+                    color = if (isClickable) MaterialTheme.colorScheme.onSurface else Color.Gray
                 )
             }
 

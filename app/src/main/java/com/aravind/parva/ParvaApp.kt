@@ -57,23 +57,25 @@ fun ParvaApp() {
             MahaParvaDetailScreen(
                 viewModel = viewModel,
                 onBackClick = { navController.popBackStack() },
-                onParvaClick = { parvaIndex ->
-                    navController.navigate("mahaparva/$mahaParvaId/parva/$parvaIndex/list")
+                onParvaClick = { parvaIndex, yojanaMode ->
+                    navController.navigate("mahaparva/$mahaParvaId/parva/$parvaIndex/list/$yojanaMode")
                 }
             )
         }
         
         composable(
-            "mahaparva/{mahaParvaId}/parva/{parvaIndex}/{viewMode}",
+            "mahaparva/{mahaParvaId}/parva/{parvaIndex}/{viewMode}/{yojanaMode}",
             arguments = listOf(
                 navArgument("mahaParvaId") { type = NavType.StringType },
                 navArgument("parvaIndex") { type = NavType.IntType },
-                navArgument("viewMode") { type = NavType.StringType }
+                navArgument("viewMode") { type = NavType.StringType },
+                navArgument("yojanaMode") { type = NavType.BoolType }
             )
         ) { backStackEntry ->
             val mahaParvaId = backStackEntry.arguments?.getString("mahaParvaId") ?: ""
             val parvaIndex = backStackEntry.arguments?.getInt("parvaIndex") ?: 0
             val viewMode = backStackEntry.arguments?.getString("viewMode") ?: "list"
+            val yojanaMode = backStackEntry.arguments?.getBoolean("yojanaMode") ?: false
             val viewModel: MahaParvaViewModel = viewModel(
                 key = mahaParvaId,
                 factory = MahaParvaViewModelFactory(repository, mahaParvaId)
@@ -82,24 +84,27 @@ fun ParvaApp() {
                 viewModel = viewModel,
                 parvaIndex = parvaIndex,
                 viewMode = viewMode,
+                yojanaMode = yojanaMode,
                 onBackClick = { navController.popBackStack() },
-                onSaptahaClick = { saptahaIndex ->
-                    navController.navigate("mahaparva/$mahaParvaId/parva/$parvaIndex/saptaha/$saptahaIndex")
+                onSaptahaClick = { saptahaIndex, yojanaMode ->
+                    navController.navigate("mahaparva/$mahaParvaId/parva/$parvaIndex/saptaha/$saptahaIndex/$yojanaMode")
                 }
             )
         }
         
         composable(
-            "mahaparva/{mahaParvaId}/parva/{parvaIndex}/saptaha/{saptahaIndex}",
+            "mahaparva/{mahaParvaId}/parva/{parvaIndex}/saptaha/{saptahaIndex}/{yojanaMode}",
             arguments = listOf(
                 navArgument("mahaParvaId") { type = NavType.StringType },
                 navArgument("parvaIndex") { type = NavType.IntType },
-                navArgument("saptahaIndex") { type = NavType.IntType }
+                navArgument("saptahaIndex") { type = NavType.IntType },
+                navArgument("yojanaMode") { type = NavType.BoolType }
             )
         ) { backStackEntry ->
             val mahaParvaId = backStackEntry.arguments?.getString("mahaParvaId") ?: ""
             val parvaIndex = backStackEntry.arguments?.getInt("parvaIndex") ?: 0
             val saptahaIndex = backStackEntry.arguments?.getInt("saptahaIndex") ?: 0
+            val yojanaMode = backStackEntry.arguments?.getBoolean("yojanaMode") ?: false
             val viewModel: MahaParvaViewModel = viewModel(
                 key = mahaParvaId,
                 factory = MahaParvaViewModelFactory(repository, mahaParvaId)
@@ -108,6 +113,7 @@ fun ParvaApp() {
                 viewModel = viewModel,
                 parvaIndex = parvaIndex,
                 saptahaIndex = saptahaIndex,
+                yojanaMode = yojanaMode,
                 onBackClick = { navController.popBackStack() },
                 onDinaClick = { dinaIndex ->
                     navController.navigate("mahaparva/$mahaParvaId/parva/$parvaIndex/saptaha/$saptahaIndex/dina/$dinaIndex")
