@@ -77,22 +77,43 @@ fun MahaParvaCard(
                 )
             }
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+            // Date range
+            val dateFormatter = DateTimeFormatter.ofPattern("MMM dd, yyyy")
+            Column(
+                verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 Text(
-                    text = "Day ${mahaParva.currentDayNumber ?: "—"} of 343",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.primary
-                )
-                
-                val dateFormatter = DateTimeFormatter.ofPattern("MMM dd, yyyy")
-                Text(
-                    text = mahaParva.startDate.format(dateFormatter),
+                    text = "${mahaParva.startDate.format(dateFormatter)} → ${mahaParva.endDate.format(dateFormatter)}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+                
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    if (mahaParva.isOnHold) {
+                        Text(
+                            text = "⏸ ON HOLD",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    } else {
+                        Text(
+                            text = "Day ${mahaParva.currentDayNumber ?: "—"} of 343",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                    
+                    if (mahaParva.totalHoldDays > 0) {
+                        Text(
+                            text = "${mahaParva.totalHoldDays} day${if (mahaParva.totalHoldDays > 1) "s" else ""} on hold",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.tertiary
+                        )
+                    }
+                }
             }
 
             LinearProgressIndicator(

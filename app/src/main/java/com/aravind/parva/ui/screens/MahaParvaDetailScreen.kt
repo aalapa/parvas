@@ -3,13 +3,16 @@ package com.aravind.parva.ui.screens
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.aravind.parva.data.model.HoldPeriod
 import com.aravind.parva.data.model.MahaParva
+import com.aravind.parva.ui.components.HoldManagementDialog
 import com.aravind.parva.ui.components.MandalaSection
 import com.aravind.parva.ui.components.MandalaView
 import com.aravind.parva.viewmodel.MahaParvaViewModel
@@ -25,6 +28,8 @@ fun MahaParvaDetailScreen(
     // Get data from ViewModel
     val mahaParva by viewModel.mahaParva.collectAsStateWithLifecycle()
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
+    
+    var showHoldDialog by remember { mutableStateOf(false) }
     
     // Handle loading and null states
     if (isLoading || mahaParva == null) {
@@ -48,10 +53,23 @@ fun MahaParvaDetailScreen(
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
                 },
+                actions = {
+                    IconButton(onClick = { showHoldDialog = true }) {
+                        Icon(
+                            imageVector = Icons.Default.MoreVert,
+                            contentDescription = "Manage Hold Periods",
+                            tint = if (currentMahaParva.isOnHold)
+                                MaterialTheme.colorScheme.error
+                            else
+                                MaterialTheme.colorScheme.onPrimary
+                        )
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primary,
                     titleContentColor = MaterialTheme.colorScheme.onPrimary,
-                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
+                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimary,
+                    actionIconContentColor = MaterialTheme.colorScheme.onPrimary
                 )
             )
         }
@@ -143,6 +161,18 @@ fun MahaParvaDetailScreen(
                 }
             }
         }
+    }
+
+    // Hold Management Dialog
+    if (showHoldDialog) {
+        HoldManagementDialog(
+            mahaParva = currentMahaParva,
+            onSave = { newHoldPeriods ->
+                viewModel.updateHoldPeriods(newHoldPeriods)
+                showHoldDialog = false
+            },
+            onDismiss = { showHoldDialog = false }
+        )
     }
 }
 

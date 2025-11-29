@@ -26,6 +26,8 @@ fun MahaParvaEditorDialog(
     var title by remember { mutableStateOf(existingMahaParva?.title ?: "") }
     var description by remember { mutableStateOf(existingMahaParva?.description ?: "") }
     var accountabilityEmail by remember { mutableStateOf(existingMahaParva?.accountabilityPartnerEmail ?: "") }
+    var startDate by remember { mutableStateOf(existingMahaParva?.startDate ?: LocalDate.now()) }
+    var showDatePicker by remember { mutableStateOf(false) }
     var selectedStyle by remember { mutableStateOf(existingMahaParva?.mandalaStyle ?: MandalaStyle.CIRCULAR_PETAL) }
     var useCustomColors by remember { mutableStateOf(existingMahaParva?.customStartColor != null) }
     var startColor by remember { mutableStateOf(existingMahaParva?.customStartColor ?: Color.Black) }
@@ -72,6 +74,30 @@ fun MahaParvaEditorDialog(
                     placeholder = { Text("partner@example.com (optional)") },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
+                )
+
+                Divider()
+
+                // Start Date Selection
+                Text(
+                    "Start Date",
+                    style = MaterialTheme.typography.titleMedium
+                )
+                
+                OutlinedButton(
+                    onClick = { showDatePicker = true },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        startDate.format(java.time.format.DateTimeFormatter.ofPattern("MMMM dd, yyyy"))
+                    )
+                }
+                
+                val endDate = startDate.plusDays(342)
+                Text(
+                    "End date: ${endDate.format(java.time.format.DateTimeFormatter.ofPattern("MMMM dd, yyyy"))} (343 days)",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
                 Divider()
@@ -167,7 +193,7 @@ fun MahaParvaEditorDialog(
                         MahaParva.create(
                             title = title,
                             description = description,
-                            startDate = LocalDate.now(),
+                            startDate = startDate,
                             accountabilityPartnerEmail = accountabilityEmail,
                             mandalaStyle = selectedStyle,
                             customStartColor = if (useCustomColors) startColor else null,
@@ -178,14 +204,15 @@ fun MahaParvaEditorDialog(
                         MahaParva.create(
                             title = title,
                             description = description,
-                            startDate = existingMahaParva.startDate, // Keep original start date
+                            startDate = startDate,
                             accountabilityPartnerEmail = accountabilityEmail,
                             mandalaStyle = selectedStyle,
                             customStartColor = if (useCustomColors) startColor else null,
                             customEndColor = if (useCustomColors) endColor else null
                         ).copy(
                             id = existingMahaParva.id, // Keep original ID
-                            createdAt = existingMahaParva.createdAt // Keep original creation date
+                            createdAt = existingMahaParva.createdAt, // Keep original creation date
+                            holdPeriods = existingMahaParva.holdPeriods // Keep hold periods
                         )
                     }
                     onSave(mahaParva)
@@ -193,6 +220,103 @@ fun MahaParvaEditorDialog(
                 enabled = title.isNotBlank()
             ) {
                 Text(if (existingMahaParva == null) "Create" else "Save")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
+    
+    // Date Picker Dialog
+    if (showDatePicker) {
+        DatePickerDialog(
+            currentDate = startDate,
+            onDateSelected = { selectedDate ->
+                startDate = selectedDate
+                showDatePicker = false
+            },
+            onDismiss = { showDatePicker = false }
+        )
+    }
+}
+
+@Composable
+private fun DatePickerDialog(
+    currentDate: LocalDate,
+    onDateSelected: (LocalDate) -> Unit,
+    onDismiss: () -> Unit
+) {
+    var year by remember { mutableStateOf(currentDate.year) }
+    var month by remember { mutableStateOf(currentDate.monthValue) }
+    var day by remember { mutableStateOf(currentDate.dayOfMonth) }
+    
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Select Start Date") },
+        text = {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                // Year
+                OutlinedTextField(
+                    value = year.toString(),
+                    onValueChange = { 
+                        it.toIntOrNull()?.let { newYear ->
+                            if (newYear in 2020..2100) year = newYear
+                        }
+                    },
+                    label = { Text("Year") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                
+                // Month
+                OutlinedTextField(
+                    value = month.toString(),
+                    onValueChange = { 
+                        it.toIntOrNull()?.let { newMonth ->
+                            if (newMonth in 1..12) month = newMonth
+                        }
+                    },
+                    label = { Text("Month (1-12)") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                
+                // Day
+                OutlinedTextField(
+                    value = day.toString(),
+                    onValueChange = { 
+                        it.toIntOrNull()?.let { newDay ->
+                            if (newDay in 1..31) day = newDay
+                        }
+                    },
+                    label = { Text("Day (1-31)") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                
+                Text(
+                    "Selected: ${try { LocalDate.of(year, month, day).format(java.time.format.DateTimeFormatter.ofPattern("MMMM dd, yyyy")) } catch (e: Exception) { "Invalid date" }}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    try {
+                        val selectedDate = LocalDate.of(year, month, day)
+                        onDateSelected(selectedDate)
+                    } catch (e: Exception) {
+                        // Invalid date, do nothing
+                    }
+                }
+            ) {
+                Text("OK")
             }
         },
         dismissButton = {

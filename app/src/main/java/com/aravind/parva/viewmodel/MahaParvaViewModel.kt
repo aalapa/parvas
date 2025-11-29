@@ -2,6 +2,7 @@ package com.aravind.parva.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.aravind.parva.data.model.HoldPeriod
 import com.aravind.parva.data.model.MahaParva
 import com.aravind.parva.data.repository.MahaParvaRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -58,6 +59,12 @@ class MahaParvaViewModel(
     ) {
         viewModelScope.launch {
             repository.updateDina(mahaParvaId, dayNumber, dailyIntention, notes, isCompleted)
+        }
+    }
+
+    fun updateHoldPeriods(holdPeriods: List<HoldPeriod>) {
+        viewModelScope.launch {
+            repository.updateHoldPeriods(mahaParvaId, holdPeriods)
         }
     }
 }

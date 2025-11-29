@@ -150,5 +150,17 @@ class Converters {
         val type = object : TypeToken<List<Dina>>() {}.type
         return gson.fromJson(dinasJson, type)
     }
+
+    // List<HoldPeriod> converter
+    @TypeConverter
+    fun fromHoldPeriodList(holdPeriods: List<HoldPeriod>): String {
+        return gson.toJson(holdPeriods)
+    }
+
+    @TypeConverter
+    fun toHoldPeriodList(json: String): List<HoldPeriod> {
+        val type = object : TypeToken<List<HoldPeriod>>() {}.type
+        return gson.fromJson(json, type)
+    }
 }
 

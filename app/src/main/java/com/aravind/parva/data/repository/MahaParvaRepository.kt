@@ -2,6 +2,7 @@ package com.aravind.parva.data.repository
 
 import com.aravind.parva.data.local.dao.MahaParvaDao
 import com.aravind.parva.data.local.entities.MahaParvaEntity
+import com.aravind.parva.data.model.HoldPeriod
 import com.aravind.parva.data.model.MahaParva
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -143,6 +144,17 @@ class MahaParvaRepository(private val mahaParvaDao: MahaParvaDao) {
         }
         
         saveMahaParva(mahaParva.copy(parvas = updatedParvas))
+    }
+
+    /**
+     * Update hold periods for a Maha-Parva
+     */
+    suspend fun updateHoldPeriods(
+        mahaParvaId: String,
+        holdPeriods: List<HoldPeriod>
+    ) {
+        val mahaParva = getMahaParvaByIdOnce(mahaParvaId) ?: return
+        saveMahaParva(mahaParva.copy(holdPeriods = holdPeriods))
     }
 }
 

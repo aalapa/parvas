@@ -13,7 +13,7 @@ import com.aravind.parva.data.local.entities.MahaParvaEntity
  */
 @Database(
     entities = [MahaParvaEntity::class],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 @TypeConverters(Converters::class)

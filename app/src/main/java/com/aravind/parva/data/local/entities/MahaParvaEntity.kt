@@ -4,7 +4,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import com.aravind.parva.data.model.*
+import com.aravind.parva.data.model.HoldPeriod
+import com.aravind.parva.data.model.MahaParva
+import com.aravind.parva.data.model.MandalaStyle
+import com.aravind.parva.data.model.Parva
 import java.time.LocalDate
 
 /**
@@ -24,6 +27,7 @@ data class MahaParvaEntity(
     val mandalaStyle: MandalaStyle,
     val customStartColorArgb: Int?, // Stored as Int instead of Color
     val customEndColorArgb: Int?,   // Stored as Int instead of Color
+    val holdPeriods: List<HoldPeriod> = emptyList(), // Hold periods
     val createdAt: LocalDate
 ) {
     /**
@@ -40,6 +44,7 @@ data class MahaParvaEntity(
             mandalaStyle = mandalaStyle,
             customStartColor = customStartColorArgb?.let { Color(it) }, // Convert Int to Color
             customEndColor = customEndColorArgb?.let { Color(it) },     // Convert Int to Color
+            holdPeriods = holdPeriods,
             createdAt = createdAt
         )
     }
@@ -59,6 +64,7 @@ data class MahaParvaEntity(
                 mandalaStyle = mahaParva.mandalaStyle,
                 customStartColorArgb = mahaParva.customStartColor?.toArgb(), // Convert Color to Int
                 customEndColorArgb = mahaParva.customEndColor?.toArgb(),     // Convert Color to Int
+                holdPeriods = mahaParva.holdPeriods,
                 createdAt = mahaParva.createdAt
             )
         }

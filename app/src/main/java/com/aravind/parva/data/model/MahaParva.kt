@@ -16,13 +16,20 @@ data class MahaParva(
     val mandalaStyle: MandalaStyle = MandalaStyle.CIRCULAR_PETAL,
     val customStartColor: androidx.compose.ui.graphics.Color? = null, // null = use VIBGYOR
     val customEndColor: androidx.compose.ui.graphics.Color? = null,
+    val holdPeriods: List<HoldPeriod> = emptyList(), // Periods when Maha-Parva was on hold
     val createdAt: LocalDate = LocalDate.now()
 ) {
     /**
-     * The end date of this Maha-Parva (343 days from start)
+     * Total days on hold
+     */
+    val totalHoldDays: Int
+        get() = holdPeriods.sumOf { it.days }
+    
+    /**
+     * The end date of this Maha-Parva (343 days + hold days from start)
      */
     val endDate: LocalDate
-        get() = startDate.plusDays(342)
+        get() = startDate.plusDays((342 + totalHoldDays).toLong())
 
     /**
      * Check if this Maha-Parva is currently active
@@ -40,14 +47,36 @@ data class MahaParva(
         get() = LocalDate.now().isAfter(endDate)
 
     /**
-     * Get the current day number if active, null otherwise
+     * Calculate effective day number accounting for hold periods
+     * Returns null if currently on hold or not active
      */
     val currentDayNumber: Int?
         get() {
             if (!isActive) return null
             val today = LocalDate.now()
-            return ((today.toEpochDay() - startDate.toEpochDay()).toInt() + 1)
-                .coerceIn(1, 343)
+            
+            // Check if currently on hold
+            if (holdPeriods.any { it.contains(today) }) {
+                return null // On hold, no current day
+            }
+            
+            // Calculate days elapsed minus hold days before today
+            var daysElapsed = (today.toEpochDay() - startDate.toEpochDay()).toInt() + 1
+            val holdDaysBeforeToday = holdPeriods
+                .filter { !it.endDate.isAfter(today) }
+                .sumOf { it.days }
+            
+            val effectiveDay = (daysElapsed - holdDaysBeforeToday).coerceIn(1, 343)
+            return if (effectiveDay <= 343) effectiveDay else null
+        }
+    
+    /**
+     * Check if currently on hold
+     */
+    val isOnHold: Boolean
+        get() {
+            val today = LocalDate.now()
+            return holdPeriods.any { it.contains(today) }
         }
 
     /**
