@@ -61,7 +61,7 @@ fun ParvaDetailScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("${parva.theme.displayName} Parva") },
+                title = { Text("Parva ${parva.number} - ${parva.theme.sanskritName}") },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
@@ -211,13 +211,13 @@ private fun SaptahaCard(
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 Text(
-                    text = "Saptaha ${saptaha.number}",
-                    style = MaterialTheme.typography.labelLarge,
+                    text = "Saptaha ${saptaha.number} - ${saptaha.theme.sanskritName}",
+                    style = MaterialTheme.typography.titleMedium,
                     color = saptaha.theme.color
                 )
                 Text(
                     text = saptaha.theme.displayName,
-                    style = MaterialTheme.typography.titleMedium
+                    style = MaterialTheme.typography.bodyMedium
                 )
                 Text(
                     text = saptaha.theme.description,

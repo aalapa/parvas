@@ -136,7 +136,7 @@ fun MahaParvaDetailScreen(
                     )
                     currentMahaParva.parvas.forEach { parva ->
                         Text(
-                            "${parva.number}. ${parva.theme.displayName}",
+                            "${parva.number}. ${parva.theme.sanskritName} - ${parva.theme.displayName}",
                             style = MaterialTheme.typography.bodySmall
                         )
                     }

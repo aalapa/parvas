@@ -125,11 +125,11 @@ fun DinaDetailScreen(
                     Divider(modifier = Modifier.padding(vertical = 8.dp))
 
                     Text(
-                        "Parva: ${parva.theme.displayName}",
+                        "Parva ${parva.number} - ${parva.theme.sanskritName} (${parva.theme.displayName})",
                         style = MaterialTheme.typography.bodySmall
                     )
                     Text(
-                        "Saptaha: ${saptaha.theme.displayName}",
+                        "Saptaha ${saptaha.number} - ${saptaha.theme.sanskritName} (${saptaha.theme.displayName})",
                         style = MaterialTheme.typography.bodySmall
                     )
                 }

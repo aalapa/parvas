@@ -53,7 +53,7 @@ fun SaptahaDetailScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("${saptaha.theme.displayName} Saptaha") },
+                title = { Text("Saptaha ${saptaha.number} - ${saptaha.theme.sanskritName}") },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
@@ -86,13 +86,13 @@ fun SaptahaDetailScreen(
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Text(
-                            "Saptaha ${saptaha.number}",
-                            style = MaterialTheme.typography.labelLarge,
+                            "Saptaha ${saptaha.number} - ${saptaha.theme.sanskritName}",
+                            style = MaterialTheme.typography.titleLarge,
                             color = saptaha.theme.color
                         )
                         Text(
                             saptaha.theme.displayName,
-                            style = MaterialTheme.typography.titleLarge
+                            style = MaterialTheme.typography.titleMedium
                         )
                         Text(
                             saptaha.theme.description,

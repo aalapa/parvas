@@ -8,12 +8,14 @@ import androidx.compose.ui.graphics.Color
  */
 enum class CycleTheme(
     val displayName: String,
+    val sanskritName: String,
     val description: String,
     val color: Color,
     val goalPrompts: List<String>
 ) {
     BEGINNING(
         "Beginning",
+        "Arambha",
         "The foundation is laid. New habits and intentions take root.",
         Color(0xFF8B00FF), // Violet
         listOf(
@@ -26,6 +28,7 @@ enum class CycleTheme(
     ),
     PRACTICE(
         "Practice",
+        "Abhyasa",
         "Repetition builds strength. Consistency becomes easier.",
         Color(0xFF4B0082), // Indigo
         listOf(
@@ -38,6 +41,7 @@ enum class CycleTheme(
     ),
     DISCERNMENT(
         "Discernment",
+        "Viveka",
         "Clarity emerges. You see what works and what doesn't.",
         Color(0xFF0000FF), // Blue
         listOf(
@@ -50,6 +54,7 @@ enum class CycleTheme(
     ),
     ASCENT(
         "Ascent",
+        "Aroha",
         "Growth accelerates. Momentum carries you forward.",
         Color(0xFF00FF00), // Green
         listOf(
@@ -62,6 +67,7 @@ enum class CycleTheme(
     ),
     MASTERY(
         "Mastery",
+        "Siddhi",
         "Skills solidify. Actions feel natural and effortless.",
         Color(0xFFFFFF00), // Yellow
         listOf(
@@ -74,6 +80,7 @@ enum class CycleTheme(
     ),
     FLOW(
         "Flow",
+        "Pravaha",
         "You are in rhythm. The practice becomes part of who you are.",
         Color(0xFFFF7F00), // Orange
         listOf(
@@ -86,6 +93,7 @@ enum class CycleTheme(
     ),
     RENEWAL(
         "Renewal",
+        "Nava",
         "Integration and reflection. Preparing for the next cycle.",
         Color(0xFFFF0000), // Red
         listOf(
