@@ -91,7 +91,7 @@ fun MahaParvaDetailScreen(
 
             val sections = mahaParva.parvas.map { parva ->
                 MandalaSection(
-                    label = parva.theme.displayName.take(4), // Short label for mandala
+                    label = parva.theme.displayName, // Full theme name
                     color = parva.theme.color,
                     centerText = parva.number.toString(),
                     theme = parva.theme

@@ -8,6 +8,8 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -26,7 +28,7 @@ import java.time.format.DateTimeFormatter
 fun ParvaDetailScreen(
     mahaParvaId: String,
     parvaIndex: Int,
-    viewMode: String, // "mandala" or "list"
+    viewMode: String, // "mandala" or "list" (initial mode from navigation)
     onBackClick: () -> Unit,
     onSaptahaClick: (Int) -> Unit
 ) {
@@ -38,6 +40,9 @@ fun ParvaDetailScreen(
         )
     }
     val parva = mahaParva.parvas[parvaIndex]
+    
+    // Local state to toggle between views
+    var currentViewMode by remember { mutableStateOf(viewMode) }
 
     Scaffold(
         topBar = {
@@ -48,26 +53,53 @@ fun ParvaDetailScreen(
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
                 },
+                actions = {
+                    // Toggle button to switch between views
+                    IconButton(
+                        onClick = {
+                            currentViewMode = if (currentViewMode == "mandala") "list" else "mandala"
+                        }
+                    ) {
+                        Icon(
+                            imageVector = if (currentViewMode == "mandala") 
+                                Icons.Default.List 
+                            else 
+                                Icons.Default.Menu,
+                            contentDescription = if (currentViewMode == "mandala") 
+                                "Switch to List View" 
+                            else 
+                                "Switch to Mandala View"
+                        )
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primary,
                     titleContentColor = MaterialTheme.colorScheme.onPrimary,
-                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
+                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimary,
+                    actionIconContentColor = MaterialTheme.colorScheme.onPrimary
                 )
             )
         }
     ) { padding ->
-        if (viewMode == "mandala") {
+        if (currentViewMode == "mandala") {
             // Mandala view of 7 Saptahas
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding)
                     .padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
+                Text(
+                    text = "7 Saptahas - Tap any section",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                
                 val sections = parva.saptahas.map { saptaha ->
                     MandalaSection(
-                        label = saptaha.theme.displayName.take(4),
+                        label = saptaha.theme.displayName, // Full name, not truncated
                         color = saptaha.theme.color,
                         centerText = saptaha.number.toString(),
                         theme = saptaha.theme

@@ -94,26 +94,43 @@ fun MandalaView(
                     style = Stroke(width = 3f)
                 )
                 
-                // Draw text label
-                val labelAngle = (startAngle + anglePerSection / 2f) * PI.toFloat() / 180f
-                val labelRadius = radius * 0.65f
+                // Draw text label along the arc
+                val middleAngle = startAngle + anglePerSection / 2f
+                val labelAngle = middleAngle * PI.toFloat() / 180f
+                val labelRadius = radius * 0.70f // Closer to edge
                 val labelX = centerX + labelRadius * cos(labelAngle)
                 val labelY = centerY + labelRadius * sin(labelAngle)
                 
                 drawContext.canvas.nativeCanvas.apply {
+                    // Save canvas state
+                    save()
+                    
+                    // Move to label position
+                    translate(labelX, labelY)
+                    
+                    // Rotate text to follow the arc
+                    // Add 90 degrees so text is perpendicular to radius
+                    rotate(middleAngle + 90f)
+                    
                     val paint = android.graphics.Paint().apply {
                         color = android.graphics.Color.WHITE
-                        textSize = 40f
+                        textSize = 36f
                         textAlign = android.graphics.Paint.Align.CENTER
                         isFakeBoldText = true
-                        setShadowLayer(8f, 0f, 0f, android.graphics.Color.BLACK)
+                        setShadowLayer(10f, 0f, 0f, android.graphics.Color.BLACK)
+                        isAntiAlias = true
                     }
+                    
+                    // Draw text at origin (since we translated)
                     drawText(
                         section.label,
-                        labelX,
-                        labelY + 15f, // Adjust for vertical centering
+                        0f,
+                        0f,
                         paint
                     )
+                    
+                    // Restore canvas state
+                    restore()
                 }
             }
             
