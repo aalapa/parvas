@@ -9,7 +9,8 @@ data class Saptaha(
     val number: Int, // 1-7 within its Parva
     val theme: CycleTheme,
     val startDate: LocalDate,
-    val dinas: List<Dina> = emptyList()
+    val dinas: List<Dina> = emptyList(),
+    val customGoal: String = "" // User's custom goal for this 7-day week
 ) {
     init {
         require(number in 1..7) { "Saptaha number must be between 1 and 7" }
@@ -39,6 +40,18 @@ data class Saptaha(
             val today = LocalDate.now()
             return !today.isBefore(startDate) && !today.isAfter(endDate)
         }
+
+    /**
+     * Check if this Saptaha is in the past (cannot be edited)
+     */
+    val isPast: Boolean
+        get() = LocalDate.now().isAfter(endDate)
+
+    /**
+     * Check if this Saptaha is editable (current or future)
+     */
+    val isEditable: Boolean
+        get() = !isPast
 
     companion object {
         /**

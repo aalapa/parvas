@@ -35,6 +35,7 @@ fun DinaDetailScreen(
     val saptaha = parva.saptahas[saptahaIndex]
     val dina = saptaha.dinas[dinaIndex]
 
+    var dailyIntention by remember { mutableStateOf(dina.dailyIntention) }
     var notes by remember { mutableStateOf(dina.notes) }
     var isCompleted by remember { mutableStateOf(dina.isCompleted) }
 
@@ -122,6 +123,63 @@ fun DinaDetailScreen(
                 }
             }
 
+            // Daily Intention section
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = saptaha.theme.color.copy(alpha = 0.1f)
+                )
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            "🎯",
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                        Text(
+                            "Daily Intention",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = saptaha.theme.color
+                        )
+                    }
+                    Text(
+                        "What do you intend to accomplish today?",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    
+                    if (!dina.isEditable) {
+                        // Show as read-only for past days
+                        Text(
+                            text = if (dailyIntention.isEmpty()) 
+                                "No intention was set" 
+                            else 
+                                dailyIntention,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = if (dailyIntention.isEmpty())
+                                MaterialTheme.colorScheme.onSurfaceVariant
+                            else
+                                MaterialTheme.colorScheme.onSurface
+                        )
+                    } else {
+                        OutlinedTextField(
+                            value = dailyIntention,
+                            onValueChange = { dailyIntention = it },
+                            modifier = Modifier.fillMaxWidth(),
+                            placeholder = { Text("e.g., Complete React hooks tutorial, build todo app") },
+                            minLines = 2,
+                            maxLines = 4,
+                            enabled = dina.isEditable
+                        )
+                    }
+                }
+            }
+
             // Notes section
             Card(
                 modifier = Modifier.fillMaxWidth()
@@ -130,12 +188,20 @@ fun DinaDetailScreen(
                     modifier = Modifier.padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            "📝",
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                        Text(
+                            "Reflection & Notes",
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                    }
                     Text(
-                        "Notes for Posterity",
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                    Text(
-                        "Record your thoughts, experiences, and insights from this day.",
+                        "Record what you actually did, learned, and experienced.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -153,11 +219,11 @@ fun DinaDetailScreen(
                     Button(
                         onClick = {
                             // In real app: Save to database
-                            // viewModel.updateDinaNotes(mahaParvaId, dina.dayNumber, notes)
+                            // viewModel.updateDina(mahaParvaId, dina.dayNumber, dailyIntention, notes, isCompleted)
                         },
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text("Save Notes")
+                        Text("Save")
                     }
                 }
             }

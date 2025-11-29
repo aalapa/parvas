@@ -12,8 +12,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.aravind.parva.data.model.CycleTheme
 
+/**
+ * Reusable goal card for Parva or Saptaha
+ */
 @Composable
-fun ParvaGoalCard(
+fun GoalCard(
+    title: String,
     theme: CycleTheme,
     currentGoal: String,
     isEditable: Boolean,
@@ -39,7 +43,7 @@ fun ParvaGoalCard(
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 Text(
-                    text = "My Goal for this Parva",
+                    text = title,
                     style = MaterialTheme.typography.labelMedium,
                     color = theme.color
                 )
@@ -71,7 +75,8 @@ fun ParvaGoalCard(
     }
 
     if (showDialog) {
-        ParvaGoalEditDialog(
+        GoalEditDialog(
+            title = title,
             theme = theme,
             currentGoal = currentGoal,
             onDismiss = { showDialog = false },
@@ -84,7 +89,8 @@ fun ParvaGoalCard(
 }
 
 @Composable
-private fun ParvaGoalEditDialog(
+private fun GoalEditDialog(
+    title: String,
     theme: CycleTheme,
     currentGoal: String,
     onDismiss: () -> Unit,
@@ -96,9 +102,9 @@ private fun ParvaGoalEditDialog(
         onDismissRequest = onDismiss,
         title = {
             Column {
-                Text("Set Your Goal")
+                Text(title)
                 Text(
-                    text = "${theme.displayName} Parva",
+                    text = "${theme.displayName}",
                     style = MaterialTheme.typography.bodyMedium,
                     color = theme.color
                 )

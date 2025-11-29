@@ -22,7 +22,7 @@ import com.aravind.parva.data.model.MahaParva
 import com.aravind.parva.data.model.Saptaha
 import com.aravind.parva.ui.components.MandalaSection
 import com.aravind.parva.ui.components.MandalaView
-import com.aravind.parva.ui.components.ParvaGoalCard
+import com.aravind.parva.ui.components.GoalCard
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
@@ -95,7 +95,8 @@ fun ParvaDetailScreen(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 // Goal Card at the top
-                ParvaGoalCard(
+                GoalCard(
+                    title = "My Goal for this Parva (49 days)",
                     theme = parva.theme,
                     currentGoal = parva.customGoal,
                     isEditable = parva.isEditable,
@@ -150,7 +151,8 @@ fun ParvaDetailScreen(
             ) {
                 // Goal Card as first item
                 item {
-                    ParvaGoalCard(
+                    GoalCard(
+                        title = "My Goal for this Parva (49 days)",
                         theme = parva.theme,
                         currentGoal = parva.customGoal,
                         isEditable = parva.isEditable,

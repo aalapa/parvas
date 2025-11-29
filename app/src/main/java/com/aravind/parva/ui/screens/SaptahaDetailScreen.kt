@@ -16,6 +16,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import com.aravind.parva.data.model.Dina
 import com.aravind.parva.data.model.MahaParva
+import com.aravind.parva.ui.components.GoalCard
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
@@ -94,6 +95,20 @@ fun SaptahaDetailScreen(
                         )
                     }
                 }
+            }
+
+            // Goal Card for this Saptaha
+            item {
+                GoalCard(
+                    title = "My Goal for this Week",
+                    theme = saptaha.theme,
+                    currentGoal = saptaha.customGoal,
+                    isEditable = saptaha.isEditable,
+                    onGoalChanged = { newGoal ->
+                        // In real app: Update via ViewModel
+                        // viewModel.updateSaptahaGoal(mahaParvaId, parvaIndex, saptahaIndex, newGoal)
+                    }
+                )
             }
 
             // 7 Dinas

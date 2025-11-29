@@ -9,7 +9,8 @@ data class Dina(
     val dayNumber: Int, // 1-343 (absolute day in Maha-Parva)
     val date: LocalDate,
     val dinaTheme: DinaTheme,
-    val notes: String = "",
+    val dailyIntention: String = "", // What you plan to do today
+    val notes: String = "", // What you actually did/learned
     val isCompleted: Boolean = false
 ) {
     init {
@@ -33,6 +34,18 @@ data class Dina(
      */
     val dayInSaptaha: Int
         get() = ((dayNumber - 1) % 7) + 1
+
+    /**
+     * Check if this Dina is in the past (cannot be edited)
+     */
+    val isPast: Boolean
+        get() = LocalDate.now().isAfter(date)
+
+    /**
+     * Check if this Dina is editable (today or future)
+     */
+    val isEditable: Boolean
+        get() = !isPast
 
     companion object {
         /**
