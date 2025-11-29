@@ -94,7 +94,7 @@ data class Parva(
                     theme = saptahaTheme,
                     startDate = saptahaStartDate,
                     absoluteDayOffset = saptahaDayOffset,
-                    customColor = customColor
+                    customColor = customColor // Saptahas inherit Parva's gradient color
                 )
             }
             return Parva(

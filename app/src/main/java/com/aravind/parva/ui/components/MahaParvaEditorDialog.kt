@@ -174,14 +174,18 @@ fun MahaParvaEditorDialog(
                             customEndColor = if (useCustomColors) endColor else null
                         )
                     } else {
-                        // Update existing (in real app, this would be more sophisticated)
-                        existingMahaParva.copy(
+                        // Update existing - need to recreate with new colors to regenerate gradient
+                        MahaParva.create(
                             title = title,
                             description = description,
+                            startDate = existingMahaParva.startDate, // Keep original start date
                             accountabilityPartnerEmail = accountabilityEmail,
                             mandalaStyle = selectedStyle,
                             customStartColor = if (useCustomColors) startColor else null,
                             customEndColor = if (useCustomColors) endColor else null
+                        ).copy(
+                            id = existingMahaParva.id, // Keep original ID
+                            createdAt = existingMahaParva.createdAt // Keep original creation date
                         )
                     }
                     onSave(mahaParva)
