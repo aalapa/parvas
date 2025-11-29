@@ -9,35 +9,47 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.aravind.parva.data.model.MahaParva
+import com.aravind.parva.viewmodel.MahaParvaViewModel
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DinaDetailScreen(
-    mahaParvaId: String,
+    viewModel: MahaParvaViewModel,
     parvaIndex: Int,
     saptahaIndex: Int,
     dinaIndex: Int,
     onBackClick: () -> Unit
 ) {
-    // Sample data
-    val mahaParva = remember {
-        MahaParva.create(
-            title = "Spiritual Growth",
-            startDate = LocalDate.now()
-        )
+    // Get data from ViewModel
+    val mahaParva by viewModel.mahaParva.collectAsStateWithLifecycle()
+    val isLoadingData by viewModel.isLoading.collectAsStateWithLifecycle()
+    
+    // Handle loading and null states
+    if (isLoadingData || mahaParva == null) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator()
+        }
+        return
     }
-    val parva = mahaParva.parvas[parvaIndex]
+    
+    val currentMahaParva = mahaParva!!
+    val parva = currentMahaParva.parvas[parvaIndex]
     val saptaha = parva.saptahas[saptahaIndex]
     val dina = saptaha.dinas[dinaIndex]
 
-    var dailyIntention by remember { mutableStateOf(dina.dailyIntention) }
-    var notes by remember { mutableStateOf(dina.notes) }
-    var isCompleted by remember { mutableStateOf(dina.isCompleted) }
+    var dailyIntention by remember(dina.dayNumber) { mutableStateOf(dina.dailyIntention) }
+    var notes by remember(dina.dayNumber) { mutableStateOf(dina.notes) }
+    var isCompleted by remember(dina.dayNumber) { mutableStateOf(dina.isCompleted) }
 
     Scaffold(
         topBar = {
@@ -218,8 +230,12 @@ fun DinaDetailScreen(
 
                     Button(
                         onClick = {
-                            // In real app: Save to database
-                            // viewModel.updateDina(mahaParvaId, dina.dayNumber, dailyIntention, notes, isCompleted)
+                            viewModel.updateDina(
+                                dayNumber = dina.dayNumber,
+                                dailyIntention = dailyIntention,
+                                notes = notes,
+                                isCompleted = isCompleted
+                            )
                         },
                         modifier = Modifier.fillMaxWidth()
                     ) {

@@ -13,6 +13,9 @@ data class MahaParva(
     val startDate: LocalDate,
     val parvas: List<Parva> = emptyList(),
     val accountabilityPartnerEmail: String = "",
+    val mandalaStyle: MandalaStyle = MandalaStyle.CIRCULAR_PETAL,
+    val customStartColor: androidx.compose.ui.graphics.Color? = null, // null = use VIBGYOR
+    val customEndColor: androidx.compose.ui.graphics.Color? = null,
     val createdAt: LocalDate = LocalDate.now()
 ) {
     /**
@@ -104,18 +107,29 @@ data class MahaParva(
             title: String,
             description: String = "",
             startDate: LocalDate = LocalDate.now(),
-            accountabilityPartnerEmail: String = ""
+            accountabilityPartnerEmail: String = "",
+            mandalaStyle: MandalaStyle = MandalaStyle.CIRCULAR_PETAL,
+            customStartColor: androidx.compose.ui.graphics.Color? = null,
+            customEndColor: androidx.compose.ui.graphics.Color? = null
         ): MahaParva {
+            // Generate colors (custom gradient or VIBGYOR)
+            val colors = com.aravind.parva.utils.ColorUtils.getColorsForMahaParva(
+                customStartColor,
+                customEndColor
+            )
+            
             val parvas = (1..7).map { parvaNumber ->
                 val parvaStartDate = startDate.plusDays(((parvaNumber - 1) * 49).toLong())
                 val parvaTheme = CycleTheme.fromIndex(parvaNumber - 1)
+                val parvaColor = colors[parvaNumber - 1]
                 val parvaDayOffset = (parvaNumber - 1) * 49 + 1
                 
                 Parva.create(
                     number = parvaNumber,
                     theme = parvaTheme,
                     startDate = parvaStartDate,
-                    absoluteDayOffset = parvaDayOffset
+                    absoluteDayOffset = parvaDayOffset,
+                    customColor = parvaColor
                 )
             }
             return MahaParva(
@@ -123,7 +137,10 @@ data class MahaParva(
                 description = description,
                 startDate = startDate,
                 parvas = parvas,
-                accountabilityPartnerEmail = accountabilityPartnerEmail
+                accountabilityPartnerEmail = accountabilityPartnerEmail,
+                mandalaStyle = mandalaStyle,
+                customStartColor = customStartColor,
+                customEndColor = customEndColor
             )
         }
     }

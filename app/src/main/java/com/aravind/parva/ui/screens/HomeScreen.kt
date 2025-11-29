@@ -10,33 +10,26 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.aravind.parva.data.model.MahaParva
 import com.aravind.parva.ui.components.MahaParvaCard
+import com.aravind.parva.ui.components.MahaParvaEditorDialog
+import com.aravind.parva.viewmodel.HomeViewModel
 import java.time.LocalDate
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
+    viewModel: HomeViewModel,
     onMahaParvaClick: (String) -> Unit,
     onSettingsClick: () -> Unit
 ) {
-    // Sample data - in real app, this would come from ViewModel/Repository
-    var mahaParvas by remember {
-        mutableStateOf(
-            listOf(
-                MahaParva.create(
-                    title = "Spiritual Growth",
-                    description = "A journey of 343 days towards inner peace",
-                    startDate = LocalDate.now()
-                ),
-                MahaParva.create(
-                    title = "Master Kotlin",
-                    description = "Complete mastery of Kotlin and Android development",
-                    startDate = LocalDate.now().minusDays(50)
-                )
-            )
-        )
-    }
+    // Get data from ViewModel
+    val mahaParvas by viewModel.mahaParvas.collectAsStateWithLifecycle(initialValue = emptyList())
+    val isLoading by viewModel.isLoading.collectAsStateWithLifecycle(initialValue = false)
+    
+    var showCreateDialog by remember { mutableStateOf(false) }
+    var editingMahaParva by remember { mutableStateOf<MahaParva?>(null) }
 
     Scaffold(
         topBar = {
@@ -57,12 +50,7 @@ fun HomeScreen(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {
-                    // Add new Maha-Parva
-                    val newMahaParva = MahaParva.create(
-                        title = "New Journey ${mahaParvas.size + 1}",
-                        description = "A new 343-day cycle"
-                    )
-                    mahaParvas = mahaParvas + newMahaParva
+                    showCreateDialog = true
                 }
             ) {
                 Icon(Icons.Default.Add, contentDescription = "Add Maha-Parva")
@@ -92,11 +80,34 @@ fun HomeScreen(
                 items(mahaParvas) { mahaParva ->
                     MahaParvaCard(
                         mahaParva = mahaParva,
-                        onClick = { onMahaParvaClick(mahaParva.id) }
+                        onClick = { onMahaParvaClick(mahaParva.id) },
+                        onEditClick = { editingMahaParva = mahaParva }
                     )
                 }
             }
         }
+    }
+    
+    // Create/Edit Dialog
+    if (showCreateDialog || editingMahaParva != null) {
+        MahaParvaEditorDialog(
+            existingMahaParva = editingMahaParva,
+            onDismiss = {
+                showCreateDialog = false
+                editingMahaParva = null
+            },
+            onSave = { newOrUpdatedMahaParva ->
+                if (editingMahaParva != null) {
+                    // Update existing
+                    viewModel.updateMahaParva(newOrUpdatedMahaParva)
+                } else {
+                    // Create new
+                    viewModel.createMahaParva(newOrUpdatedMahaParva)
+                }
+                showCreateDialog = false
+                editingMahaParva = null
+            }
+        )
     }
 }
 

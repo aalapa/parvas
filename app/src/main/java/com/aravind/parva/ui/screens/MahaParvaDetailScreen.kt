@@ -8,31 +8,41 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.aravind.parva.data.model.MahaParva
 import com.aravind.parva.ui.components.MandalaSection
 import com.aravind.parva.ui.components.MandalaView
+import com.aravind.parva.viewmodel.MahaParvaViewModel
 import java.time.LocalDate
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MahaParvaDetailScreen(
-    mahaParvaId: String,
+    viewModel: MahaParvaViewModel,
     onBackClick: () -> Unit,
     onParvaClick: (Int) -> Unit
 ) {
-    // Sample data - in real app, get from ViewModel
-    val mahaParva = remember {
-        MahaParva.create(
-            title = "Spiritual Growth",
-            description = "A journey of 343 days towards inner peace",
-            startDate = LocalDate.now()
-        )
+    // Get data from ViewModel
+    val mahaParva by viewModel.mahaParva.collectAsStateWithLifecycle()
+    val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
+    
+    // Handle loading and null states
+    if (isLoading || mahaParva == null) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator()
+        }
+        return
     }
+    
+    val currentMahaParva = mahaParva!! // Safe because we checked above
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(mahaParva.title) },
+                title = { Text(currentMahaParva.title) },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
@@ -58,29 +68,29 @@ fun MahaParvaDetailScreen(
             Card(
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Text(
-                        mahaParva.description,
-                        style = MaterialTheme.typography.bodyLarge
-                    )
-                    
-                    val currentDay = mahaParva.currentDayNumber
-                    if (currentDay != null) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
                         Text(
-                            "Day $currentDay of 343",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.primary
+                            currentMahaParva.description,
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                        
+                        val currentDay = currentMahaParva.currentDayNumber
+                        if (currentDay != null) {
+                            Text(
+                                "Day $currentDay of 343",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                        
+                        LinearProgressIndicator(
+                            progress = (currentMahaParva.currentDayNumber ?: 0).toFloat() / 343f,
+                            modifier = Modifier.fillMaxWidth()
                         )
                     }
-                    
-                    LinearProgressIndicator(
-                        progress = (mahaParva.currentDayNumber ?: 0).toFloat() / 343f,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
             }
 
             // Mandala showing 7 Parvas
@@ -89,20 +99,21 @@ fun MahaParvaDetailScreen(
                 style = MaterialTheme.typography.titleLarge
             )
 
-            val sections = mahaParva.parvas.map { parva ->
+            val sections = currentMahaParva.parvas.map { parva ->
                 MandalaSection(
                     label = parva.theme.displayName, // Full theme name
-                    color = parva.theme.color,
+                    color = parva.color, // Use custom color if set
                     centerText = parva.number.toString(),
                     theme = parva.theme
                 )
             }
 
-            val currentParvaIndex = mahaParva.currentParva?.let { it.number - 1 }
+            val currentParvaIndex = currentMahaParva.currentParva?.let { it.number - 1 }
 
             MandalaView(
                 sections = sections,
                 currentSectionIndex = currentParvaIndex,
+                style = currentMahaParva.mandalaStyle, // Use Maha-Parva's style
                 onSectionClick = { index ->
                     onParvaClick(index)
                 },
@@ -123,7 +134,7 @@ fun MahaParvaDetailScreen(
                         "Tap a section to explore",
                         style = MaterialTheme.typography.labelLarge
                     )
-                    mahaParva.parvas.forEach { parva ->
+                    currentMahaParva.parvas.forEach { parva ->
                         Text(
                             "${parva.number}. ${parva.theme.displayName}",
                             style = MaterialTheme.typography.bodySmall

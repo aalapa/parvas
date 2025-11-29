@@ -10,7 +10,8 @@ data class Parva(
     val theme: CycleTheme,
     val startDate: LocalDate,
     val saptahas: List<Saptaha> = emptyList(),
-    val customGoal: String = "" // User's custom goal for this 49-day period
+    val customGoal: String = "", // User's custom goal for this 49-day period
+    val customColor: androidx.compose.ui.graphics.Color? = null // Override theme color
 ) {
     init {
         require(number in 1..7) { "Parva number must be between 1 and 7" }
@@ -61,6 +62,12 @@ data class Parva(
         get() = !isPast
 
     /**
+     * Get the effective color (custom if set, otherwise theme default)
+     */
+    val color: androidx.compose.ui.graphics.Color
+        get() = customColor ?: theme.color
+
+    /**
      * Get the current Saptaha if this Parva is active
      */
     val currentSaptaha: Saptaha?
@@ -74,7 +81,8 @@ data class Parva(
             number: Int,
             theme: CycleTheme,
             startDate: LocalDate,
-            absoluteDayOffset: Int // Starting day number in Maha-Parva
+            absoluteDayOffset: Int, // Starting day number in Maha-Parva
+            customColor: androidx.compose.ui.graphics.Color? = null
         ): Parva {
             val saptahas = (1..7).map { saptahaNumber ->
                 val saptahaStartDate = startDate.plusDays(((saptahaNumber - 1) * 7).toLong())
@@ -85,14 +93,16 @@ data class Parva(
                     number = saptahaNumber,
                     theme = saptahaTheme,
                     startDate = saptahaStartDate,
-                    absoluteDayOffset = saptahaDayOffset
+                    absoluteDayOffset = saptahaDayOffset,
+                    customColor = customColor
                 )
             }
             return Parva(
                 number = number,
                 theme = theme,
                 startDate = startDate,
-                saptahas = saptahas
+                saptahas = saptahas,
+                customColor = customColor
             )
         }
     }

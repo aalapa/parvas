@@ -10,7 +10,8 @@ data class Saptaha(
     val theme: CycleTheme,
     val startDate: LocalDate,
     val dinas: List<Dina> = emptyList(),
-    val customGoal: String = "" // User's custom goal for this 7-day week
+    val customGoal: String = "", // User's custom goal for this 7-day week
+    val customColor: androidx.compose.ui.graphics.Color? = null // Override theme color
 ) {
     init {
         require(number in 1..7) { "Saptaha number must be between 1 and 7" }
@@ -53,6 +54,12 @@ data class Saptaha(
     val isEditable: Boolean
         get() = !isPast
 
+    /**
+     * Get the effective color (custom if set, otherwise theme default)
+     */
+    val color: androidx.compose.ui.graphics.Color
+        get() = customColor ?: theme.color
+
     companion object {
         /**
          * Create a Saptaha with all 7 Dinas initialized
@@ -61,7 +68,8 @@ data class Saptaha(
             number: Int,
             theme: CycleTheme,
             startDate: LocalDate,
-            absoluteDayOffset: Int // Starting day number in Maha-Parva
+            absoluteDayOffset: Int, // Starting day number in Maha-Parva
+            customColor: androidx.compose.ui.graphics.Color? = null
         ): Saptaha {
             val dinas = (0..6).map { dayOffset ->
                 Dina.create(
@@ -73,7 +81,8 @@ data class Saptaha(
                 number = number,
                 theme = theme,
                 startDate = startDate,
-                dinas = dinas
+                dinas = dinas,
+                customColor = customColor
             )
         }
     }

@@ -18,31 +18,42 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.aravind.parva.data.model.MahaParva
 import com.aravind.parva.data.model.Saptaha
 import com.aravind.parva.ui.components.MandalaSection
 import com.aravind.parva.ui.components.MandalaView
 import com.aravind.parva.ui.components.GoalCard
+import com.aravind.parva.viewmodel.MahaParvaViewModel
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ParvaDetailScreen(
-    mahaParvaId: String,
+    viewModel: MahaParvaViewModel,
     parvaIndex: Int,
     viewMode: String, // "mandala" or "list" (initial mode from navigation)
     onBackClick: () -> Unit,
     onSaptahaClick: (Int) -> Unit
 ) {
-    // Sample data
-    val mahaParva = remember {
-        MahaParva.create(
-            title = "Spiritual Growth",
-            startDate = LocalDate.now()
-        )
+    // Get data from ViewModel
+    val mahaParva by viewModel.mahaParva.collectAsStateWithLifecycle()
+    val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
+    
+    // Handle loading and null states
+    if (isLoading || mahaParva == null) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator()
+        }
+        return
     }
-    val parva = mahaParva.parvas[parvaIndex]
+    
+    val currentMahaParva = mahaParva!!
+    val parva = currentMahaParva.parvas[parvaIndex]
     
     // Local state to toggle between views
     var currentViewMode by remember { mutableStateOf(viewMode) }
@@ -98,11 +109,11 @@ fun ParvaDetailScreen(
                 GoalCard(
                     title = "My Goal for this Parva (49 days)",
                     theme = parva.theme,
+                    customColor = parva.customColor,
                     currentGoal = parva.customGoal,
                     isEditable = parva.isEditable,
                     onGoalChanged = { newGoal ->
-                        // In real app: Update via ViewModel
-                        // viewModel.updateParvaGoal(mahaParvaId, parvaIndex, newGoal)
+                        viewModel.updateParvaGoal(parvaIndex, newGoal)
                     },
                     modifier = Modifier.padding(16.dp)
                 )
@@ -116,7 +127,7 @@ fun ParvaDetailScreen(
                 val sections = parva.saptahas.map { saptaha ->
                     MandalaSection(
                         label = saptaha.theme.displayName, // Full name, not truncated
-                        color = saptaha.theme.color,
+                        color = saptaha.color, // Use custom color if set
                         centerText = saptaha.number.toString(),
                         theme = saptaha.theme
                     )
@@ -130,14 +141,15 @@ fun ParvaDetailScreen(
                         .aspectRatio(1f)
                         .padding(16.dp)
                 ) {
-                    MandalaView(
-                        sections = sections,
-                        currentSectionIndex = currentSaptahaIndex,
-                        onSectionClick = { index ->
-                            onSaptahaClick(index)
-                        },
-                        modifier = Modifier.fillMaxSize()
-                    )
+                MandalaView(
+                    sections = sections,
+                    currentSectionIndex = currentSaptahaIndex,
+                    style = currentMahaParva.mandalaStyle, // Use Maha-Parva's style
+                    onSectionClick = { index ->
+                        onSaptahaClick(index)
+                    },
+                    modifier = Modifier.fillMaxSize()
+                )
                 }
             }
         } else {
@@ -154,11 +166,11 @@ fun ParvaDetailScreen(
                     GoalCard(
                         title = "My Goal for this Parva (49 days)",
                         theme = parva.theme,
+                        customColor = parva.customColor,
                         currentGoal = parva.customGoal,
                         isEditable = parva.isEditable,
                         onGoalChanged = { newGoal ->
-                            // In real app: Update via ViewModel
-                            // viewModel.updateParvaGoal(mahaParvaId, parvaIndex, newGoal)
+                            viewModel.updateParvaGoal(parvaIndex, newGoal)
                         }
                     )
                 }

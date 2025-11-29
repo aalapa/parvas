@@ -9,6 +9,7 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.aravind.parva.data.model.CycleTheme
 
@@ -19,17 +20,19 @@ import com.aravind.parva.data.model.CycleTheme
 fun GoalCard(
     title: String,
     theme: CycleTheme,
+    customColor: Color? = null,
     currentGoal: String,
     isEditable: Boolean,
     onGoalChanged: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val effectiveColor = customColor ?: theme.color
     var showDialog by remember { mutableStateOf(false) }
 
     Card(
         modifier = modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = theme.color.copy(alpha = 0.1f)
+            containerColor = effectiveColor.copy(alpha = 0.1f)
         )
     ) {
         Row(
@@ -45,7 +48,7 @@ fun GoalCard(
                 Text(
                     text = title,
                     style = MaterialTheme.typography.labelMedium,
-                    color = theme.color
+                    color = effectiveColor
                 )
                 
                 if (currentGoal.isEmpty()) {
@@ -67,7 +70,7 @@ fun GoalCard(
                     Icon(
                         imageVector = Icons.Default.Edit,
                         contentDescription = "Edit goal",
-                        tint = theme.color
+                        tint = effectiveColor
                     )
                 }
             }

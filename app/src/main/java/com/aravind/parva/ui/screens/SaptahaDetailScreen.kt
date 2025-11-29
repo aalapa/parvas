@@ -14,29 +14,40 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.aravind.parva.data.model.Dina
 import com.aravind.parva.data.model.MahaParva
 import com.aravind.parva.ui.components.GoalCard
+import com.aravind.parva.viewmodel.MahaParvaViewModel
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SaptahaDetailScreen(
-    mahaParvaId: String,
+    viewModel: MahaParvaViewModel,
     parvaIndex: Int,
     saptahaIndex: Int,
     onBackClick: () -> Unit,
     onDinaClick: (Int) -> Unit
 ) {
-    // Sample data
-    val mahaParva = remember {
-        MahaParva.create(
-            title = "Spiritual Growth",
-            startDate = LocalDate.now()
-        )
+    // Get data from ViewModel
+    val mahaParva by viewModel.mahaParva.collectAsStateWithLifecycle()
+    val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
+    
+    // Handle loading and null states
+    if (isLoading || mahaParva == null) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator()
+        }
+        return
     }
-    val parva = mahaParva.parvas[parvaIndex]
+    
+    val currentMahaParva = mahaParva!!
+    val parva = currentMahaParva.parvas[parvaIndex]
     val saptaha = parva.saptahas[saptahaIndex]
 
     Scaffold(
@@ -102,11 +113,11 @@ fun SaptahaDetailScreen(
                 GoalCard(
                     title = "My Goal for this Week",
                     theme = saptaha.theme,
+                    customColor = saptaha.customColor,
                     currentGoal = saptaha.customGoal,
                     isEditable = saptaha.isEditable,
                     onGoalChanged = { newGoal ->
-                        // In real app: Update via ViewModel
-                        // viewModel.updateSaptahaGoal(mahaParvaId, parvaIndex, saptahaIndex, newGoal)
+                        viewModel.updateSaptahaGoal(parvaIndex, saptahaIndex, newGoal)
                     }
                 )
             }
