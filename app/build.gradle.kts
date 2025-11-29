@@ -1,7 +1,50 @@
+import java.util.Properties
+import java.io.FileInputStream
+import java.io.FileOutputStream
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("com.google.devtools.ksp")
+}
+
+// Auto-increment version
+val versionPropsFile = file("../version.properties")
+val versionProps = Properties()
+
+if (versionPropsFile.canRead()) {
+    versionProps.load(FileInputStream(versionPropsFile))
+} else {
+    throw GradleException("Could not read version.properties!")
+}
+
+fun getVersionCode(): Int {
+    return versionProps.getProperty("versionCode", "1").toInt()
+}
+
+fun getVersionName(): String {
+    val major = versionProps.getProperty("versionMajor", "1")
+    val minor = versionProps.getProperty("versionMinor", "0")
+    val patch = versionProps.getProperty("versionPatch", "0")
+    return "$major.$minor.$patch"
+}
+
+fun incrementVersion() {
+    val currentPatch = versionProps.getProperty("versionPatch", "0").toInt()
+    val currentVersionCode = versionProps.getProperty("versionCode", "1").toInt()
+    
+    versionProps.setProperty("versionPatch", (currentPatch + 1).toString())
+    versionProps.setProperty("versionCode", (currentVersionCode + 1).toString())
+    
+    versionProps.store(FileOutputStream(versionPropsFile), "Version auto-incremented on build")
+    println("Version incremented to ${getVersionName()} (${currentVersionCode + 1})")
+}
+
+// Increment version on assembleRelease or assembleDebug
+gradle.taskGraph.whenReady {
+    if (allTasks.any { it.name.contains("assemble", ignoreCase = true) }) {
+        incrementVersion()
+    }
 }
 
 android {
@@ -12,8 +55,8 @@ android {
         applicationId = "com.aravind.parva"
         minSdk = 24
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = getVersionCode()
+        versionName = getVersionName()
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -46,6 +89,16 @@ android {
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
+        }
+    }
+    
+    // Custom APK naming
+    applicationVariants.all {
+        outputs.all {
+            val output = this as com.android.build.gradle.internal.api.BaseVariantOutputImpl
+            val versionName = getVersionName()
+            val buildType = buildType.name
+            output.outputFileName = "parva-${versionName}-${buildType}.apk"
         }
     }
 }
