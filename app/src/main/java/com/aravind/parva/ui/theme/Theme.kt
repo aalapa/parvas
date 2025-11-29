@@ -16,21 +16,33 @@ import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
 private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80
+    primary = DeepPurple80,
+    onPrimary = androidx.compose.ui.graphics.Color.Black,
+    primaryContainer = DeepPurple60Dark,
+    secondary = Indigo80,
+    tertiary = Teal90,
+    background = androidx.compose.ui.graphics.Color(0xFF121212),
+    surface = androidx.compose.ui.graphics.Color(0xFF1E1E1E),
+    onBackground = androidx.compose.ui.graphics.Color.White,
+    onSurface = androidx.compose.ui.graphics.Color.White
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40
+    primary = DeepPurple40,
+    onPrimary = androidx.compose.ui.graphics.Color.White,
+    primaryContainer = DeepPurple80,
+    secondary = Indigo40,
+    tertiary = Teal40,
+    background = androidx.compose.ui.graphics.Color(0xFFFFFBFE),
+    surface = androidx.compose.ui.graphics.Color(0xFFFFFBFE),
+    onBackground = androidx.compose.ui.graphics.Color(0xFF1C1B1F),
+    onSurface = androidx.compose.ui.graphics.Color(0xFF1C1B1F)
 )
 
 @Composable
 fun ParvaTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = true,
+    dynamicColor: Boolean = false, // Disabled by default - use our beautiful purple theme!
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {

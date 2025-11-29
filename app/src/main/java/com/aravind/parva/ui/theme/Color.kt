@@ -2,13 +2,20 @@ package com.aravind.parva.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val Purple80 = Color(0xFFD0BCFF)
-val PurpleGrey80 = Color(0xFFCCC2DC)
-val Pink80 = Color(0xFFEFB8C8)
+// Light Theme Colors - Deep Purple & Indigo
+val DeepPurple80 = Color(0xFFD1C4E9)
+val DeepPurple60 = Color(0xFFB39DDB)
+val Indigo80 = Color(0xFFC5CAE9)
 
-val Purple40 = Color(0xFF6650a4)
-val PurpleGrey40 = Color(0xFF625b71)
-val Pink40 = Color(0xFF7D5260)
+val DeepPurple40 = Color(0xFF673AB7)  // Primary
+val DeepPurple60Dark = Color(0xFF512DA8)  // Primary Dark
+val Indigo40 = Color(0xFF3F51B5)  // Secondary
+val Teal40 = Color(0xFF009688)  // Tertiary/Accent
+
+// Dark Theme Colors
+val DeepPurple90 = Color(0xFFEDE7F6)
+val Indigo90 = Color(0xFFE8EAF6)
+val Teal90 = Color(0xFFB2DFDB)
 
 // VIBGYOR colors for the 7 themes
 val VibgyorViolet = Color(0xFF8B00FF)    // Beginning

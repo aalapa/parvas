@@ -10,6 +10,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.aravind.parva.data.local.ParvaDatabase
+import com.aravind.parva.data.preferences.UserPreferencesManager
 import com.aravind.parva.data.repository.MahaParvaRepository
 import com.aravind.parva.ui.screens.*
 import com.aravind.parva.viewmodel.HomeViewModel
@@ -18,7 +19,7 @@ import com.aravind.parva.viewmodel.MahaParvaViewModel
 import com.aravind.parva.viewmodel.MahaParvaViewModelFactory
 
 @Composable
-fun ParvaApp() {
+fun ParvaApp(preferencesManager: UserPreferencesManager) {
     val context = LocalContext.current
     val navController = rememberNavController()
     
@@ -149,10 +150,9 @@ fun ParvaApp() {
         
         composable("settings") {
             SettingsScreen(
-                onBackClick = { navController.popBackStack() },
-                onExportJournalClick = { /* Handle journal export */ },
-                onExportDataClick = { /* Handle data export */ },
-                onImportDataClick = { /* Handle data import */ }
+                preferencesManager = preferencesManager,
+                repository = repository,
+                onBackClick = { navController.popBackStack() }
             )
         }
     }

@@ -36,6 +36,20 @@ class MahaParvaRepository(private val mahaParvaDao: MahaParvaDao) {
     }
 
     /**
+     * Get all Maha-Parvas (one-time, for export)
+     */
+    suspend fun getAllMahaParvasOnce(): List<MahaParva> {
+        return mahaParvaDao.getAllMahaParvasOnce().map { it.toMahaParva() }
+    }
+    
+    /**
+     * Insert a Maha-Parva (for import)
+     */
+    suspend fun insertMahaParva(mahaParva: MahaParva) {
+        mahaParvaDao.insertMahaParva(MahaParvaEntity.fromMahaParva(mahaParva))
+    }
+
+    /**
      * Insert or update a Maha-Parva
      */
     suspend fun saveMahaParva(mahaParva: MahaParva) {

@@ -1,6 +1,9 @@
 package com.aravind.parva.ui.screens
 
 import android.content.Intent
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -13,19 +16,61 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.core.content.FileProvider
+import com.aravind.parva.data.preferences.UserPreferencesManager
+import com.aravind.parva.data.repository.MahaParvaRepository
+import com.google.gson.Gson
+import com.google.gson.GsonBuilder
+import kotlinx.coroutines.launch
+import java.io.File
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
-    onBackClick: () -> Unit,
-    onExportJournalClick: () -> Unit,
-    onExportDataClick: () -> Unit,
-    onImportDataClick: () -> Unit
+    preferencesManager: UserPreferencesManager,
+    repository: MahaParvaRepository,
+    onBackClick: () -> Unit
 ) {
-    var isDarkTheme by remember { mutableStateOf(false) }
-    var saptahaViewMode by remember { mutableStateOf("list") } // "list" or "mandala"
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
+    
+    // Collect preferences
+    val isDarkTheme by preferencesManager.darkThemeFlow.collectAsState(initial = false)
+    val useDynamicColors by preferencesManager.useDynamicColorsFlow.collectAsState(initial = false)
+    
+    // File picker for import
+    val importLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let {
+            scope.launch {
+                try {
+                    val inputStream = context.contentResolver.openInputStream(it)
+                    val jsonString = inputStream?.bufferedReader()?.use { reader -> reader.readText() }
+                    
+                    if (jsonString != null) {
+                        val gson = GsonBuilder().create()
+                        val importedData = gson.fromJson(jsonString, com.aravind.parva.data.model.ExportData::class.java)
+                        
+                        // Import all Maha-Parvas
+                        importedData.mahaParvas.forEach { mahaParva ->
+                            repository.insertMahaParva(mahaParva)
+                        }
+                        
+                        snackbarHostState.showSnackbar("Data imported successfully!")
+                    }
+                } catch (e: Exception) {
+                    snackbarHostState.showSnackbar("Failed to import: ${e.message}")
+                }
+            }
+        }
+    }
     
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text("Settings") },
@@ -81,53 +126,42 @@ fun SettingsScreen(
                         }
                         Switch(
                             checked = isDarkTheme,
-                            onCheckedChange = { 
-                                isDarkTheme = it
-                                // In real app: Save to DataStore
+                            onCheckedChange = { enabled ->
+                                scope.launch {
+                                    preferencesManager.setDarkTheme(enabled)
+                                }
                             }
                         )
                     }
-                }
-            }
-
-            // View Preferences Section
-            Card(
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Text(
-                        "View Preferences",
-                        style = MaterialTheme.typography.titleMedium
-                    )
                     
-                    Text(
-                        "Saptaha View Mode",
-                        style = MaterialTheme.typography.bodyLarge
-                    )
-                    Text(
-                        "Choose how to display the 7 Saptahas within a Parva",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    Divider()
                     
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        FilterChip(
-                            selected = saptahaViewMode == "list",
-                            onClick = { saptahaViewMode = "list" },
-                            label = { Text("List View") },
-                            modifier = Modifier.weight(1f)
-                        )
-                        FilterChip(
-                            selected = saptahaViewMode == "mandala",
-                            onClick = { saptahaViewMode = "mandala" },
-                            label = { Text("Mandala View") },
-                            modifier = Modifier.weight(1f)
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                "Use System Colors",
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                            Text(
+                                if (useDynamicColors) 
+                                    "Colors from your wallpaper (Android 12+)" 
+                                else 
+                                    "Default: Purple & Indigo theme",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        Switch(
+                            checked = useDynamicColors,
+                            onCheckedChange = { enabled ->
+                                scope.launch {
+                                    preferencesManager.setUseDynamicColors(enabled)
+                                }
+                            }
                         )
                     }
                 }
@@ -147,25 +181,57 @@ fun SettingsScreen(
                     )
                     
                     SettingsItem(
-                        title = "Export Journal",
-                        subtitle = "Export notes as a journal for a specific Maha-Parva",
-                        onClick = onExportJournalClick
-                    )
-                    
-                    Divider()
-                    
-                    SettingsItem(
                         title = "Export All Data",
-                        subtitle = "Export all Maha-Parvas and notes",
-                        onClick = onExportDataClick
+                        subtitle = "Export all Maha-Parvas as JSON file",
+                        onClick = {
+                            scope.launch {
+                                try {
+                                    val allMahaParvas = repository.getAllMahaParvasOnce()
+                                    val exportData = com.aravind.parva.data.model.ExportData(
+                                        exportDate = LocalDate.now(),
+                                        version = "1.0.0",
+                                        mahaParvas = allMahaParvas
+                                    )
+                                    
+                                    val gson = GsonBuilder()
+                                        .setPrettyPrinting()
+                                        .create()
+                                    val jsonString = gson.toJson(exportData)
+                                    
+                                    // Save to file
+                                    val file = File(context.cacheDir, "parva_export_${System.currentTimeMillis()}.json")
+                                    file.writeText(jsonString)
+                                    
+                                    // Share file
+                                    val uri = FileProvider.getUriForFile(
+                                        context,
+                                        "${context.packageName}.fileprovider",
+                                        file
+                                    )
+                                    
+                                    val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                                        type = "application/json"
+                                        putExtra(Intent.EXTRA_STREAM, uri)
+                                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                    }
+                                    
+                                    context.startActivity(Intent.createChooser(shareIntent, "Export Data"))
+                                    snackbarHostState.showSnackbar("Data exported successfully!")
+                                } catch (e: Exception) {
+                                    snackbarHostState.showSnackbar("Failed to export: ${e.message}")
+                                }
+                            }
+                        }
                     )
                     
                     Divider()
                     
                     SettingsItem(
                         title = "Import Data",
-                        subtitle = "Import previously exported data",
-                        onClick = onImportDataClick
+                        subtitle = "Import previously exported JSON file",
+                        onClick = {
+                            importLauncher.launch("application/json")
+                        }
                     )
                 }
             }
@@ -183,7 +249,7 @@ fun SettingsScreen(
                         style = MaterialTheme.typography.titleMedium
                     )
                     Text(
-                        "Parva - A 343-day journey system",
+                        "Mandala - A 343-day journey system",
                         style = MaterialTheme.typography.bodyMedium
                     )
                     Text(
@@ -221,4 +287,3 @@ private fun SettingsItem(
         )
     }
 }
-

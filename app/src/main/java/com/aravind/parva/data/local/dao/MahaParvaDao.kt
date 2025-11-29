@@ -12,6 +12,9 @@ interface MahaParvaDao {
     
     @Query("SELECT * FROM maha_parvas ORDER BY startDate DESC")
     fun getAllMahaParvas(): Flow<List<MahaParvaEntity>>
+    
+    @Query("SELECT * FROM maha_parvas ORDER BY startDate DESC")
+    suspend fun getAllMahaParvasOnce(): List<MahaParvaEntity>
 
     @Query("SELECT * FROM maha_parvas WHERE id = :id")
     suspend fun getMahaParvaById(id: String): MahaParvaEntity?

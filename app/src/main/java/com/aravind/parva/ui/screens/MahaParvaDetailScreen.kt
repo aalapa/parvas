@@ -3,7 +3,7 @@ package com.aravind.parva.ui.screens
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -69,7 +69,7 @@ fun MahaParvaDetailScreen(
                         onClick = { yojanaMode = !yojanaMode }
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Edit,
+                            imageVector = Icons.Default.DateRange,
                             contentDescription = if (yojanaMode) "Exit Yojana Mode" else "Enter Yojana Mode",
                             tint = if (yojanaMode)
                                 MaterialTheme.colorScheme.tertiary
