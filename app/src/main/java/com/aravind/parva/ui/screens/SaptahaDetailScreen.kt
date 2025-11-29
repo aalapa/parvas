@@ -1,6 +1,7 @@
 package com.aravind.parva.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -86,26 +87,33 @@ fun SaptahaDetailScreen(
             // Header card
             item {
                 Card(
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .border(
+                            width = 3.dp,
+                            color = saptaha.theme.color,
+                            shape = RoundedCornerShape(12.dp)
+                        ),
+                    shape = RoundedCornerShape(12.dp)
                 ) {
                     Column(
-                        modifier = Modifier
-                            .background(saptaha.theme.color.copy(alpha = 0.2f))
-                            .padding(16.dp),
+                        modifier = Modifier.padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Text(
                             "Saptaha ${saptaha.number} - ${saptaha.theme.sanskritName}",
                             style = MaterialTheme.typography.titleLarge,
-                            color = saptaha.theme.color
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
                             saptaha.theme.displayName,
-                            style = MaterialTheme.typography.titleMedium
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
                             saptaha.theme.description,
-                            style = MaterialTheme.typography.bodyMedium
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         val dateFormatter = DateTimeFormatter.ofPattern("MMM dd, yyyy")
                         Text(
@@ -176,27 +184,33 @@ private fun DinaCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick),
+            .clickable(onClick = onClick)
+            .then(
+                if (isClickable) {
+                    Modifier.border(
+                        width = if (isToday) 3.dp else if (dina.isCompleted) 2.dp else 1.dp,
+                        color = accentColor,
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                } else {
+                    Modifier.border(
+                        width = 1.dp,
+                        color = Color.Gray.copy(alpha = 0.3f),
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                }
+            ),
         colors = CardDefaults.cardColors(
             containerColor = if (isClickable) 
                 MaterialTheme.colorScheme.surface 
             else 
                 MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-        )
+        ),
+        shape = RoundedCornerShape(12.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(
-                    if (!isClickable)
-                        Color.Gray.copy(alpha = 0.2f)
-                    else if (isToday)
-                        accentColor.copy(alpha = 0.3f)
-                    else if (dina.isCompleted)
-                        accentColor.copy(alpha = 0.15f)
-                    else
-                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
-                )
                 .padding(16.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
@@ -212,7 +226,7 @@ private fun DinaCard(
                     Text(
                         text = "Day ${dina.dayNumber}",
                         style = MaterialTheme.typography.labelLarge,
-                        color = if (isClickable) accentColor else Color.Gray
+                        color = if (isClickable) MaterialTheme.colorScheme.onSurface else Color.Gray
                     )
                     if (isToday) {
                         Surface(
@@ -223,7 +237,7 @@ private fun DinaCard(
                                 text = "Today",
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                                 style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.surface
+                                color = Color.White
                             )
                         }
                     }
@@ -248,7 +262,8 @@ private fun DinaCard(
                     Text(
                         text = "\"${dina.notes.take(50)}${if (dina.notes.length > 50) "..." else ""}\"",
                         style = MaterialTheme.typography.bodySmall,
-                        color = if (isClickable) accentColor else Color.Gray
+                        color = if (isClickable) MaterialTheme.colorScheme.onSurfaceVariant else Color.Gray,
+                        fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
                     )
                 }
             }

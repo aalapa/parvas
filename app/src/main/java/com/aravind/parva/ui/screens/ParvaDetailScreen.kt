@@ -1,6 +1,7 @@
 package com.aravind.parva.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -229,23 +230,33 @@ private fun SaptahaCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick),
+            .clickable(onClick = onClick)
+            .then(
+                if (isClickable) {
+                    Modifier.border(
+                        width = if (isActive) 3.dp else 2.dp,
+                        color = saptaha.theme.color,
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                } else {
+                    Modifier.border(
+                        width = 1.dp,
+                        color = Color.Gray.copy(alpha = 0.3f),
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                }
+            ),
         colors = CardDefaults.cardColors(
             containerColor = if (isClickable) 
                 MaterialTheme.colorScheme.surface 
             else 
                 MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-        )
+        ),
+        shape = RoundedCornerShape(12.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(
-                    if (isClickable)
-                        saptaha.theme.color.copy(alpha = if (isActive) 0.3f else 0.1f)
-                    else
-                        Color.Gray.copy(alpha = 0.2f)
-                )
                 .padding(16.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
@@ -257,7 +268,7 @@ private fun SaptahaCard(
                 Text(
                     text = "Saptaha ${saptaha.number} - ${saptaha.theme.sanskritName}",
                     style = MaterialTheme.typography.titleMedium,
-                    color = if (isClickable) saptaha.theme.color else Color.Gray
+                    color = if (isClickable) MaterialTheme.colorScheme.onSurface else Color.Gray
                 )
                 Text(
                     text = saptaha.theme.displayName,
@@ -286,7 +297,7 @@ private fun SaptahaCard(
                         text = "Active",
                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                         style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.surface
+                        color = Color.White
                     )
                 }
             }
