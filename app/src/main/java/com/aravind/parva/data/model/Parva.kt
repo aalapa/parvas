@@ -123,13 +123,14 @@ data class Parva(
             existingGoal: String?,
             oldSaptahas: List<Saptaha>?
         ): Parva {
+            // Generate 7 Saptahas with dates adjusted for holds
             val saptahas = (1..7).map { saptahaNumber ->
                 val oldSaptaha = oldSaptahas?.getOrNull(saptahaNumber - 1)
                 
-                // Base date without holds
+                // CRITICAL: Calculate BASE date (without holds) first
                 val baseSaptahaStart = baseStartDate.plusDays(((saptahaNumber - 1) * 7).toLong())
                 
-                // Adjusted date with holds
+                // Then calculate adjusted date accounting for ALL holds before this base date
                 val adjustedSaptahaStart = com.aravind.parva.utils.DateUtils.calculateAdjustedDate(
                     baseSaptahaStart,
                     holdPeriods

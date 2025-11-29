@@ -74,9 +74,14 @@ data class Saptaha(
             customColor: androidx.compose.ui.graphics.Color? = null
         ): Saptaha {
             val dinas = (0..6).map { dayOffset ->
-                Dina.create(
+                // Create Dina directly without using Dina.create() to avoid double date calculation
+                Dina(
                     dayNumber = absoluteDayOffset + dayOffset,
-                    startDate = startDate.plusDays(dayOffset.toLong())
+                    date = startDate.plusDays(dayOffset.toLong()), // Simple: startDate + dayOffset
+                    dinaTheme = DinaTheme.fromDay(absoluteDayOffset + dayOffset),
+                    dailyIntention = "",
+                    notes = "",
+                    isCompleted = false
                 )
             }
             return Saptaha(
@@ -103,13 +108,15 @@ data class Saptaha(
             existingGoal: String?,
             oldDinas: List<Dina>?
         ): Saptaha {
+            // Generate 7 Dinas with dates adjusted for holds
             val dinas = (0..6).map { dayOffset ->
                 val oldDina = oldDinas?.getOrNull(dayOffset)
                 
-                // Base date without holds
+                // CRITICAL: Use BASE date (without holds) for calculating adjustments
+                // This ensures holds are applied consistently without double-counting
                 val baseDinaDate = baseStartDate.plusDays(dayOffset.toLong())
                 
-                // Adjusted date with holds
+                // Calculate adjusted date accounting for ALL holds before this base date
                 val adjustedDinaDate = com.aravind.parva.utils.DateUtils.calculateAdjustedDate(
                     baseDinaDate,
                     holdPeriods
