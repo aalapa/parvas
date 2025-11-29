@@ -5,7 +5,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.List
@@ -20,6 +22,7 @@ import com.aravind.parva.data.model.MahaParva
 import com.aravind.parva.data.model.Saptaha
 import com.aravind.parva.ui.components.MandalaSection
 import com.aravind.parva.ui.components.MandalaView
+import com.aravind.parva.ui.components.ParvaGoalCard
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
@@ -87,10 +90,22 @@ fun ParvaDetailScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding)
-                    .padding(16.dp),
+                    .verticalScroll(rememberScrollState()),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
+                // Goal Card at the top
+                ParvaGoalCard(
+                    theme = parva.theme,
+                    currentGoal = parva.customGoal,
+                    isEditable = parva.isEditable,
+                    onGoalChanged = { newGoal ->
+                        // In real app: Update via ViewModel
+                        // viewModel.updateParvaGoal(mahaParvaId, parvaIndex, newGoal)
+                    },
+                    modifier = Modifier.padding(16.dp)
+                )
+                
                 Text(
                     text = "7 Saptahas - Tap any section",
                     style = MaterialTheme.typography.bodyMedium,
@@ -108,16 +123,21 @@ fun ParvaDetailScreen(
 
                 val currentSaptahaIndex = parva.currentSaptaha?.let { it.number - 1 }
 
-                MandalaView(
-                    sections = sections,
-                    currentSectionIndex = currentSaptahaIndex,
-                    onSectionClick = { index ->
-                        onSaptahaClick(index)
-                    },
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .weight(1f)
-                )
+                        .aspectRatio(1f)
+                        .padding(16.dp)
+                ) {
+                    MandalaView(
+                        sections = sections,
+                        currentSectionIndex = currentSaptahaIndex,
+                        onSectionClick = { index ->
+                            onSaptahaClick(index)
+                        },
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
             }
         } else {
             // List view of 7 Saptahas
@@ -128,6 +148,19 @@ fun ParvaDetailScreen(
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
+                // Goal Card as first item
+                item {
+                    ParvaGoalCard(
+                        theme = parva.theme,
+                        currentGoal = parva.customGoal,
+                        isEditable = parva.isEditable,
+                        onGoalChanged = { newGoal ->
+                            // In real app: Update via ViewModel
+                            // viewModel.updateParvaGoal(mahaParvaId, parvaIndex, newGoal)
+                        }
+                    )
+                }
+                
                 itemsIndexed(parva.saptahas) { index, saptaha ->
                     SaptahaCard(
                         saptaha = saptaha,

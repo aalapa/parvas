@@ -9,7 +9,8 @@ data class Parva(
     val number: Int, // 1-7 within its Maha-Parva
     val theme: CycleTheme,
     val startDate: LocalDate,
-    val saptahas: List<Saptaha> = emptyList()
+    val saptahas: List<Saptaha> = emptyList(),
+    val customGoal: String = "" // User's custom goal for this 49-day period
 ) {
     init {
         require(number in 1..7) { "Parva number must be between 1 and 7" }
@@ -46,6 +47,18 @@ data class Parva(
             val today = LocalDate.now()
             return !today.isBefore(startDate) && !today.isAfter(endDate)
         }
+
+    /**
+     * Check if this Parva is in the past (cannot be edited)
+     */
+    val isPast: Boolean
+        get() = LocalDate.now().isAfter(endDate)
+
+    /**
+     * Check if this Parva is editable (current or future)
+     */
+    val isEditable: Boolean
+        get() = !isPast
 
     /**
      * Get the current Saptaha if this Parva is active
