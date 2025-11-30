@@ -9,6 +9,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -17,6 +18,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.aravind.parva.data.model.MahaParva
+import com.aravind.parva.data.model.WisdomCollection
 import com.aravind.parva.viewmodel.MahaParvaViewModel
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -53,6 +55,7 @@ fun DinaDetailScreen(
     var dailyIntention by remember(dina.dayNumber) { mutableStateOf(dina.dailyIntention) }
     var notes by remember(dina.dayNumber) { mutableStateOf(dina.notes) }
     var isCompleted by remember(dina.dayNumber) { mutableStateOf(dina.isCompleted) }
+    var showWisdomDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -104,11 +107,27 @@ fun DinaDetailScreen(
                         .padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Text(
-                        "Day ${dina.dayNumber} of 343",
-                        style = MaterialTheme.typography.labelLarge,
-                        color = saptaha.theme.color
-                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Day ${dina.dayNumber} of 343",
+                            style = MaterialTheme.typography.labelLarge,
+                            color = saptaha.theme.color
+                        )
+                        IconButton(
+                            onClick = { showWisdomDialog = true },
+                            modifier = Modifier.size(32.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Info,
+                                contentDescription = "Today's Wisdom",
+                                tint = saptaha.theme.color
+                            )
+                        }
+                    }
                     Text(
                         dina.dinaTheme.displayName,
                         style = MaterialTheme.typography.titleLarge
@@ -280,6 +299,39 @@ fun DinaDetailScreen(
                 }
             }
         }
+    }
+    
+    // Wisdom Quote Dialog
+    if (showWisdomDialog) {
+        val quote = WisdomCollection.getQuoteForDay(dina.dayNumber)
+        AlertDialog(
+            onDismissRequest = { showWisdomDialog = false },
+            title = {
+                Text(
+                    text = "Day ${dina.dayNumber} Wisdom"
+                )
+            },
+            text = {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Text(
+                        text = "\"${quote.text}\"",
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                    Text(
+                        text = "— ${quote.author}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = saptaha.theme.color
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showWisdomDialog = false }) {
+                    Text("Close")
+                }
+            }
+        )
     }
 }
 

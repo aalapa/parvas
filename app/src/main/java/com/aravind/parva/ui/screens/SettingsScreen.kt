@@ -232,8 +232,8 @@ fun SettingsScreen(
                         title = "Import Data",
                         subtitle = "Import previously exported JSON file",
                         onClick = {
-                            // Use array of MIME types to show more file sources
-                            importLauncher.launch(arrayOf("application/json", "*/*"))
+                            // Use wildcard to show ALL files from ALL sources (Downloads, Drive, etc)
+                            importLauncher.launch(arrayOf("*/*"))
                         }
                     )
                 }

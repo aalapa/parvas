@@ -1,8 +1,11 @@
 package com.aravind.parva.ui.screens
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
@@ -15,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.aravind.parva.data.model.HoldPeriod
 import com.aravind.parva.data.model.MahaParva
+import com.aravind.parva.data.model.WisdomCollection
 import com.aravind.parva.ui.components.HoldManagementDialog
 import com.aravind.parva.ui.components.MandalaSection
 import com.aravind.parva.ui.components.MandalaView
@@ -34,6 +38,7 @@ fun MahaParvaDetailScreen(
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
     
     var showHoldDialog by remember { mutableStateOf(false) }
+    var showWisdomDialog by remember { mutableStateOf(false) }
     var yojanaMode by remember { mutableStateOf(false) } // Planning mode toggle
     
     val context = LocalContext.current
@@ -103,6 +108,7 @@ fun MahaParvaDetailScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
+                .verticalScroll(rememberScrollState())
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
@@ -122,11 +128,26 @@ fun MahaParvaDetailScreen(
                         
                         val currentDay = currentMahaParva.currentDayNumber
                         if (currentDay != null) {
-                            Text(
-                                "Day $currentDay of 343",
-                                style = MaterialTheme.typography.titleMedium,
-                                color = MaterialTheme.colorScheme.primary
-                            )
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "Day $currentDay of 343",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                                IconButton(
+                                    onClick = { showWisdomDialog = true }
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Info,
+                                        contentDescription = "Today's Wisdom",
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                            }
                         }
                         
                         LinearProgressIndicator(
@@ -172,7 +193,7 @@ fun MahaParvaDetailScreen(
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(1f)
+                    .aspectRatio(1f)
             )
 
             // Legend and Mode Indicator
@@ -222,6 +243,39 @@ fun MahaParvaDetailScreen(
                 showHoldDialog = false
             },
             onDismiss = { showHoldDialog = false }
+        )
+    }
+    
+    // Wisdom Quote Dialog
+    if (showWisdomDialog && currentMahaParva.currentDayNumber != null) {
+        val quote = WisdomCollection.getQuoteForDay(currentMahaParva.currentDayNumber!!)
+        AlertDialog(
+            onDismissRequest = { showWisdomDialog = false },
+            title = {
+                Text(
+                    text = "Day ${currentMahaParva.currentDayNumber} Wisdom"
+                )
+            },
+            text = {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Text(
+                        text = "\"${quote.text}\"",
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                    Text(
+                        text = "— ${quote.author}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showWisdomDialog = false }) {
+                    Text("Close")
+                }
+            }
         )
     }
 }
